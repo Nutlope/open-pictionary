@@ -2,6 +2,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { RACERS, isRacerKey } from "@/lib/racers";
+import { thinStrokes } from "@/lib/doodle";
 import type { Verdict } from "@/lib/judge";
 import type { Replay, ReplayGuess } from "@/lib/replay";
 import { tag, tagOk, type Round } from "./round";
@@ -21,7 +22,7 @@ function newId() {
   return Array.from(b, (x) => abc[x % abc.length]).join("");
 }
 
-function cleanStrokes(raw: unknown): number[][] | null {
+export function cleanStrokes(raw: unknown): number[][] | null {
   if (!Array.isArray(raw) || raw.length > 400) return null;
   let total = 0;
   const out: number[][] = [];
@@ -35,12 +36,27 @@ function cleanStrokes(raw: unknown): number[][] | null {
   return out;
 }
 
-function cleanLog(raw: unknown): ReplayGuess[] {
+export function cleanLog(raw: unknown): ReplayGuess[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .slice(0, 80)
     .filter((e): e is ReplayGuess => !!e && isRacerKey(e.k) && typeof e.g === "string" && ["correct", "close", "wrong"].includes(e.v))
     .map((e) => ({ k: e.k, g: e.g.slice(0, 40), v: e.v, t: Math.max(0, Math.min(120_000, Math.round(Number(e.t) || 0))) }));
+}
+
+/** The round's judged guesses: the server's own log, or the client's when the server has none. */
+export async function roundLog(roundId: string, clientLog?: unknown): Promise<ReplayGuess[]> {
+  let log = (await store.list(`r:${roundId}:log`))
+    .map((x) => {
+      try {
+        return JSON.parse(x) as ReplayGuess;
+      } catch {
+        return null;
+      }
+    })
+    .filter((e): e is ReplayGuess => !!e && isRacerKey(e.k));
+  if (log.length === 0) log = cleanLog(clientLog);
+  return log.sort((a, b) => a.t - b.t);
 }
 
 /**
@@ -67,17 +83,7 @@ export async function createShare(
   const strokes = cleanStrokes(rawStrokes);
   if (!strokes || strokes.length === 0) return { error: "Nothing to share yet." };
 
-  let log = (await store.list(`r:${round.id}:log`))
-    .map((x) => {
-      try {
-        return JSON.parse(x) as ReplayGuess;
-      } catch {
-        return null;
-      }
-    })
-    .filter((e): e is ReplayGuess => !!e && isRacerKey(e.k));
-  if (log.length === 0) log = cleanLog(clientLog);
-  log.sort((a, b) => a.t - b.t);
+  const log = await roundLog(round.id, clientLog);
 
   const win = log.find((e) => e.v === "correct") ?? null;
   const lastInk = Math.max(0, ...strokes.map((s) => s[s.length - 1] ?? 0));
@@ -117,20 +123,8 @@ export async function getShare(id: string): Promise<Replay | null> {
 const MAX_POINTS = 700;
 const VERDICTS: Verdict[] = ["wrong", "close", "correct"];
 
-function thin(strokes: number[][]): number[][] {
-  const total = strokes.reduce((n, s) => n + s.length / 3, 0);
-  const step = Math.max(1, Math.ceil(total / MAX_POINTS));
-  if (step === 1) return strokes;
-  return strokes.map((s) => {
-    const out: number[] = [];
-    const n = s.length / 3;
-    for (let i = 0; i < n; i++) if (i % step === 0 || i === n - 1) out.push(s[i * 3], s[i * 3 + 1], s[i * 3 + 2]);
-    return out;
-  });
-}
-
 function encodeInline(doc: Replay): string {
-  const s = thin(doc.strokes).map((flat) => {
+  const s = thinStrokes(doc.strokes, MAX_POINTS).map((flat) => {
     const out: number[] = [];
     let px = 0;
     let py = 0;

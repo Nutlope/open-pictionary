@@ -1,4 +1,5 @@
 import { BRAND } from "@/lib/brand";
+import { GLYPH_PATH } from "@/lib/creatures";
 
 /**
  * The Doodle Derby mark: a scribble loop that runs out to a finish dot, with
@@ -8,7 +9,7 @@ export function DerbyGlyph({ className = "size-8" }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" fill="none" aria-hidden className={className}>
       <path
-        d="M3.5 22c2.6-.2 4.6-2 5.6-4.6 1-2.7.2-5.6-2-5.6s-2.6 3.3-.6 5.6c2.6 3 7.2 3 9.8.4 1.6-1.6 2.2-3.8 4-4.6"
+        d={GLYPH_PATH}
         stroke="currentColor"
         strokeWidth="2.6"
         strokeLinecap="round"

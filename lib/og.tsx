@@ -3,9 +3,9 @@
  * and a doodle turned into filled outline paths (perfect-freehand runs fine on
  * the server, so a shared card shows the exact strokes, not an approximation).
  */
-import { getStroke } from "perfect-freehand";
 import { RACER_BY_KEY, type RacerKey, type Shape } from "@/lib/racers";
-import { PEN, SPACE } from "@/lib/sketch";
+import { outlinePaths } from "@/lib/doodle";
+import { BODIES } from "@/lib/creatures";
 
 export const INK = "#16130f";
 
@@ -39,36 +39,27 @@ async function loadFonts() {
   ].filter(Boolean) as { name: string; data: ArrayBuffer; weight: 600 | 800; style: "normal" }[];
 }
 
+/** Plain elements only: Satori serializes an svg and refuses components inside it. */
 function body(shape: Shape, c: string) {
-  switch (shape) {
-    case "circle":
-      return <circle cx="32" cy="33" r="27" fill={c} />;
-    case "square":
-      return <rect x="6" y="7" width="52" height="52" rx="15" fill={c} />;
-    case "triangle":
-      return <path d="M32 10 L57 54 L7 54 Z" fill={c} stroke={c} strokeWidth="9" strokeLinejoin="round" />;
-    case "pill":
-      return <rect x="3" y="14" width="58" height="38" rx="19" fill={c} />;
-    case "drop":
-      return <path d="M32 3 C 40 14, 57 28, 57 40 A 25 22 0 0 1 7 40 C 7 28, 24 14, 32 3 Z" fill={c} />;
-    case "flower":
-      return (
-        <g fill={c}>
-          {Array.from({ length: 8 }, (_, i) => {
-            const a = (i / 8) * Math.PI * 2;
-            return <circle key={i} cx={32 + Math.cos(a) * 17} cy={33 + Math.sin(a) * 17} r="11" />;
-          })}
-          <circle cx="32" cy="33" r="19" />
-        </g>
-      );
-  }
+  const b = BODIES[shape];
+  return (
+    <g fill={c} stroke={b.round ? c : undefined} strokeWidth={b.round} strokeLinejoin="round">
+      {b.prims.map((p, i) =>
+        "c" in p ? (
+          <circle key={i} cx={p.c[0]} cy={p.c[1]} r={p.c[2]} />
+        ) : "r" in p ? (
+          <rect key={i} x={p.r[0]} y={p.r[1]} width={p.r[2]} height={p.r[3]} rx={p.r[4]} />
+        ) : (
+          <path key={i} d={p.d} />
+        ),
+      )}
+    </g>
+  );
 }
-
-const EYE_Y: Record<Shape, number> = { circle: 33, square: 33, triangle: 41, pill: 33, drop: 40, flower: 33 };
 
 export function OgCreature({ k, size, mood = "idle" }: { k: RacerKey; size: number; mood?: "idle" | "happy" | "sad" }) {
   const r = RACER_BY_KEY[k];
-  const y = EYE_Y[r.shape];
+  const y = BODIES[r.shape].eyeY;
   return (
     <svg width={size} height={size} viewBox="0 0 64 64">
       {body(r.shape, r.color)}
@@ -90,36 +81,4 @@ export function OgCreature({ k, size, mood = "idle" }: { k: RacerKey; size: numb
 }
 
 /** Filled outline paths for a packed doodle, plus a viewBox cropped to the ink. */
-export function doodle(strokes: number[][]): { paths: string[]; viewBox: string } {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  const paths = strokes.map((flat) => {
-    const pts: number[][] = [];
-    for (let i = 0; i < flat.length; i += 3) {
-      pts.push([flat[i], flat[i + 1], 0.5]);
-      minX = Math.min(minX, flat[i]);
-      maxX = Math.max(maxX, flat[i]);
-      minY = Math.min(minY, flat[i + 1]);
-      maxY = Math.max(maxY, flat[i + 1]);
-    }
-    const o = getStroke(pts, { size: PEN, thinning: 0.55, smoothing: 0.55, streamline: 0.45, simulatePressure: true, last: true });
-    if (o.length < 2) {
-      const [x, y] = pts[0] ?? [0, 0];
-      return `M${x - 4} ${y} a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0`;
-    }
-    let d = `M${o[0][0].toFixed(1)} ${o[0][1].toFixed(1)}`;
-    for (let i = 1; i < o.length; i++) {
-      const [x0, y0] = o[i];
-      const [x1, y1] = o[(i + 1) % o.length];
-      d += ` Q${x0.toFixed(1)} ${y0.toFixed(1)} ${((x0 + x1) / 2).toFixed(1)} ${((y0 + y1) / 2).toFixed(1)}`;
-    }
-    return d + " Z";
-  });
-  if (!Number.isFinite(minX)) return { paths, viewBox: `0 0 ${SPACE} ${SPACE}` };
-  const side = Math.max(maxX - minX, maxY - minY, 300) * 1.22;
-  const cx = (minX + maxX) / 2;
-  const cy = (minY + maxY) / 2;
-  return { paths, viewBox: `${(cx - side / 2).toFixed(0)} ${(cy - side / 2).toFixed(0)} ${side.toFixed(0)} ${side.toFixed(0)}` };
-}
+export const doodle = (strokes: number[][]) => outlinePaths(strokes, 3);

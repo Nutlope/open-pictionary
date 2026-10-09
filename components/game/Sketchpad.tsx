@@ -4,6 +4,7 @@ import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
 import { SPACE, paint, snapshot, strokeLength, type Point, type Stroke } from "@/lib/sketch";
 import { cn } from "@/lib/utils";
 import { lookAt } from "./Creature";
+import { sound } from "./sound";
 
 export type SketchpadHandle = {
   undo: () => void;
@@ -13,6 +14,8 @@ export type SketchpadHandle = {
   strokeCount: () => number;
   snapshot: (size: number) => string | null;
   strokes: () => Stroke[];
+  /** Show a finished drawing (packed [x, y, t] strokes), read-only. */
+  load: (packed: number[][]) => void;
 };
 
 const INK = "#14181f";
@@ -73,6 +76,7 @@ export function Sketchpad({
       schedule();
     },
     clear() {
+      if (active.current) sound.pen.up();
       active.current = null;
       strokes.current = [];
       inkDone.current = 0;
@@ -91,7 +95,30 @@ export function Sketchpad({
     strokes() {
       return strokes.current;
     },
+    load(packed) {
+      active.current = null;
+      strokes.current = packed.map((flat) => {
+        const points: Point[] = [];
+        for (let i = 0; i + 1 < flat.length; i += 3) points.push([flat[i], flat[i + 1], 0.5]);
+        return { points, done: true };
+      });
+      inkDone.current = strokes.current.reduce((n, s) => n + strokeLength(s.points), 0);
+      schedule();
+    },
   }));
+
+  // The moment the paper locks (a win, the horn), a stroke still under the
+  // pen ends there: the doodle on screen is the doodle that was judged.
+  useEffect(() => {
+    const a = active.current;
+    if (!locked || !a) return;
+    a.stroke.done = true;
+    inkDone.current += strokeLength(a.stroke.points);
+    active.current = null;
+    sound.pen.up();
+    schedule();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locked]);
 
   // Keep the backing store matched to the element at device resolution.
   useEffect(() => {
@@ -133,6 +160,7 @@ export function Sketchpad({
     strokes.current.push(stroke);
     active.current = { id: e.pointerId, stroke };
     cb.current.onStrokeStart?.();
+    sound.pen.down();
     schedule();
   };
 
@@ -141,10 +169,15 @@ export function Sketchpad({
     if (!a || a.id !== e.pointerId) return;
     const events = e.nativeEvent.getCoalescedEvents?.() ?? [e.nativeEvent];
     const now = performance.now();
+    const pts = a.stroke.points;
+    const before = pts[pts.length - 1];
+    const then = a.stroke.times?.[a.stroke.times.length - 1] ?? now;
     for (const ev of events.length ? events : [e.nativeEvent]) {
-      a.stroke.points.push(toLogical(ev));
+      pts.push(toLogical(ev));
       a.stroke.times?.push(now);
     }
+    const last = pts[pts.length - 1];
+    if (before && now > then) sound.pen.move(Math.hypot(last[0] - before[0], last[1] - before[1]) / (now - then));
     schedule();
   };
 
@@ -154,6 +187,7 @@ export function Sketchpad({
     a.stroke.done = true;
     inkDone.current += strokeLength(a.stroke.points);
     active.current = null;
+    sound.pen.up();
     schedule();
   };
 

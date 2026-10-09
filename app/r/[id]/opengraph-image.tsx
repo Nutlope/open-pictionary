@@ -3,6 +3,7 @@ import { getShare } from "@/lib/server/share";
 import { RACERS, RACER_BY_KEY, onColor } from "@/lib/racers";
 import { fmtSec } from "@/lib/replay";
 import { INK, OgCreature, doodle, ogFonts } from "@/lib/og";
+import { GLYPH_PATH } from "@/lib/creatures";
 
 export const alt = "A doodle six AI models raced to guess";
 export const size = { width: 1200, height: 630 };
@@ -71,7 +72,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", flex: 1, paddingTop: 6 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 30, fontWeight: 800, letterSpacing: "-0.04em" }}>
             <svg width="38" height="38" viewBox="0 0 32 32" fill="none">
-              <path d="M3.5 22c2.6-.2 4.6-2 5.6-4.6 1-2.7.2-5.6-2-5.6s-2.6 3.3-.6 5.6c2.6 3 7.2 3 9.8.4 1.6-1.6 2.2-3.8 4-4.6" stroke={INK} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+              <path d={GLYPH_PATH} stroke={INK} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
               <circle cx="25" cy="13.5" r="4.2" fill="#F2442E" />
               <circle cx="25" cy="13.5" r="1.6" fill={INK} />
             </svg>
@@ -83,7 +84,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
               {winner && doc?.winMs != null ? `${winner.label} guessed my doodle in ${fmtSec(doc.winMs)}` : "Six AIs tried to guess my doodle. None did."}
             </div>
             <div style={{ display: "flex", fontSize: 28, fontWeight: 600, opacity: 0.7, letterSpacing: "-0.02em" }}>
-              {winner ? "Watch the race, then beat my time." : "Watch them flail, then try it yourself."}
+              {winner ? "Can you guess it faster?" : "Can you guess it? They couldn't."}
             </div>
           </div>
 

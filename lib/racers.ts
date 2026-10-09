@@ -40,6 +40,8 @@ export type Racer = {
   short: string;
   /** The creature: its body color, its body shape, and the room it paints when it wins. */
   color: string;
+  /** Its color as an emoji, for pasteable results. */
+  heart: string;
   shape: Shape;
   room: string;
   inPerM: number;
@@ -57,6 +59,7 @@ export const RACERS: Racer[] = [
     label: "Kimi K3",
     short: "Kimi K3",
     color: "#F2442E",
+    heart: "❤️",
     shape: "circle",
     room: "#FF8A7A",
     lab: "Moonshot",
@@ -71,6 +74,7 @@ export const RACERS: Racer[] = [
     label: "Qwen3.7 Plus",
     short: "Qwen3.7",
     color: "#6B4EFF",
+    heart: "💜",
     shape: "square",
     room: "#BBA8FF",
     lab: "Qwen",
@@ -85,6 +89,7 @@ export const RACERS: Racer[] = [
     label: "GLM-5.3 Flash",
     short: "GLM-5.3",
     color: "#00A870",
+    heart: "💚",
     shape: "triangle",
     room: "#6FE3B0",
     lab: "Z.ai",
@@ -101,6 +106,7 @@ export const RACERS: Racer[] = [
     label: "MiniMax M3",
     short: "MiniMax",
     color: "#F2338C",
+    heart: "🩷",
     shape: "pill",
     room: "#FF9BC8",
     lab: "MiniMax",
@@ -117,6 +123,7 @@ export const RACERS: Racer[] = [
     label: "DeepSeek V4.1 Flash",
     short: "DeepSeek",
     color: "#1F6BFF",
+    heart: "💙",
     shape: "drop",
     room: "#86C3FF",
     lab: "DeepSeek",
@@ -131,6 +138,7 @@ export const RACERS: Racer[] = [
     label: "Qwen3.5 9B",
     short: "Qwen 9B",
     color: "#FFA800",
+    heart: "💛",
     shape: "flower",
     room: "#FFD84A",
     lab: "Qwen",

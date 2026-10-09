@@ -24,7 +24,7 @@ function errorText(status: number, body: string) {
 
 type StreamResult = { content: string; promptTokens: number; completionTokens: number };
 
-async function streamChat(
+export async function streamChat(
   apiKey: string,
   body: Record<string, unknown>,
   signal: AbortSignal,

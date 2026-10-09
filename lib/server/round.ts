@@ -7,7 +7,7 @@ import { createHmac, randomBytes, timingSafeEqual, createHash } from "node:crypt
  * the scoreboard cannot be fed a word the server never dealt. Stateless, which
  * is what lets this run on any number of serverless instances.
  */
-export type Round = { id: string; word: string; t: number };
+export type Round = { id: string; word: string; t: number; /** The daily number, for a daily round. */ d?: number };
 
 function secret() {
   const s = process.env.ROUND_SECRET || process.env.TOGETHER_API_KEY || "doodle-derby-dev";
@@ -27,8 +27,8 @@ export function tagOk(data: string, t: string, bytes = 9) {
   return want.length === got.length && timingSafeEqual(want, got);
 }
 
-export function mintRound(word: string): { token: string; round: Round } {
-  const round: Round = { id: b64(randomBytes(9)), word, t: Date.now() };
+export function mintRound(word: string, daily?: number): { token: string; round: Round } {
+  const round: Round = { id: b64(randomBytes(9)), word, t: Date.now(), ...(daily ? { d: daily } : {}) };
   const body = b64(Buffer.from(JSON.stringify(round)));
   const sig = b64(createHmac("sha256", secret()).update(body).digest());
   return { token: `${body}.${sig}`, round };

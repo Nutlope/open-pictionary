@@ -3,12 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 
 /**
- * A tiny key-value store with the five Redis verbs this app needs.
+ * A tiny key-value store with the handful of Redis verbs this app needs.
  *
  * Production: Upstash Redis over its REST API (works on Vercel KV too), opted
  * into by env presence. Local dev: an in-process map that persists its
- * long-lived keys to .data/store.json, so the global board survives restarts
- * with no Redis to install.
+ * longer-lived keys to .data/store.json, so boards survive restarts with no
+ * Redis to install.
  */
 type Cmd = (string | number)[];
 
@@ -29,7 +29,8 @@ async function redis(cmds: Cmd[]): Promise<unknown[]> {
 
 /* ---------------- local fallback ---------------- */
 
-type Entry = { v: string | Record<string, string> | string[]; exp?: number };
+type Value = string | string[] | { hash: Record<string, string> } | { zset: Record<string, number> };
+type Entry = { v: Value; exp?: number };
 const g = globalThis as unknown as { __ddStore?: Map<string, Entry>; __ddSaveTimer?: NodeJS.Timeout };
 const FILE = path.join(process.cwd(), ".data", "store.json");
 
@@ -38,7 +39,14 @@ function mem(): Map<string, Entry> {
     g.__ddStore = new Map();
     try {
       const raw = JSON.parse(fs.readFileSync(FILE, "utf8")) as Record<string, Entry>;
-      for (const [k, e] of Object.entries(raw)) g.__ddStore.set(k, e);
+      for (const [k, e] of Object.entries(raw)) {
+        // Files written before hashes were tagged stored them as plain objects.
+        const v = e.v as unknown;
+        if (v && typeof v === "object" && !Array.isArray(v) && !("hash" in v) && !("zset" in v)) {
+          e.v = { hash: v as Record<string, string> };
+        }
+        g.__ddStore.set(k, e);
+      }
     } catch {
       /* first run, or a read-only filesystem */
     }
@@ -51,10 +59,11 @@ function persist() {
   g.__ddSaveTimer = setTimeout(() => {
     g.__ddSaveTimer = undefined;
     try {
+      // Anything with more than an hour to live: boards, shares, dailies.
+      // Rate limits and per-round scratch keys stay in memory only.
       const keep: Record<string, Entry> = {};
-      // Long-lived keys, plus shared rounds (they carry a TTL but must
-      // survive a dev-server restart for their links to keep working).
-      for (const [k, e] of mem()) if (!e.exp || k.startsWith("share:")) keep[k] = e;
+      const soon = Date.now() + 3_600_000;
+      for (const [k, e] of mem()) if (!e.exp || e.exp > soon) keep[k] = e;
       fs.mkdirSync(path.dirname(FILE), { recursive: true });
       fs.writeFileSync(FILE, JSON.stringify(keep));
     } catch {
@@ -72,6 +81,35 @@ function live(k: string): Entry | undefined {
   return e;
 }
 
+function put(k: string, v: Value, ttlSec?: number, keepExp = true) {
+  const prev = live(k);
+  const exp = keepExp && prev?.exp ? prev.exp : ttlSec ? Date.now() + ttlSec * 1000 : prev?.exp;
+  mem().set(k, { v, exp });
+  persist();
+}
+
+const hashOf = (k: string) => {
+  const v = live(k)?.v;
+  return v && typeof v === "object" && "hash" in v ? v.hash : {};
+};
+const zsetOf = (k: string) => {
+  const v = live(k)?.v;
+  return v && typeof v === "object" && "zset" in v ? v.zset : {};
+};
+const sortedZ = (k: string) =>
+  Object.entries(zsetOf(k))
+    .map(([member, score]) => ({ member, score }))
+    .sort((a, b) => a.score - b.score || (a.member < b.member ? -1 : 1));
+
+export type Scored = { member: string; score: number };
+
+function pairs(flat: unknown): Scored[] {
+  const arr = (flat as (string | number)[]) ?? [];
+  const out: Scored[] = [];
+  for (let i = 0; i < arr.length; i += 2) out.push({ member: String(arr[i]), score: Number(arr[i + 1]) });
+  return out;
+}
+
 /* ---------------- the verbs ---------------- */
 
 export const store = {
@@ -84,11 +122,11 @@ export const store = {
       return r === "OK";
     }
     if (live(key)) return false;
-    mem().set(key, { v: "1", exp: Date.now() + ttlSec * 1000 });
+    put(key, "1", ttlSec, false);
     return true;
   },
 
-  /** Several HINCRBY / INCRBYFLOAT in one round trip. */
+  /** Several HINCRBYFLOAT / INCRBYFLOAT in one round trip. */
   async bump(ops: { key: string; field?: string; by: number; ttlSec?: number }[]): Promise<number[]> {
     if (ops.length === 0) return [];
     if (this.remote) {
@@ -106,20 +144,17 @@ export const store = {
       }
       return vals;
     }
-    const vals = ops.map((o) => {
-      const e = live(o.key);
+    return ops.map((o) => {
       if (o.field) {
-        const h = (e?.v as Record<string, string>) ?? {};
+        const h = { ...hashOf(o.key) };
         h[o.field] = String(Number(h[o.field] ?? 0) + o.by);
-        mem().set(o.key, { v: h, exp: e?.exp ?? (o.ttlSec ? Date.now() + o.ttlSec * 1000 : undefined) });
+        put(o.key, { hash: h }, o.ttlSec);
         return Number(h[o.field]);
       }
-      const n = Number((e?.v as string) ?? 0) + o.by;
-      mem().set(o.key, { v: String(n), exp: e?.exp ?? (o.ttlSec ? Date.now() + o.ttlSec * 1000 : undefined) });
+      const n = Number((live(o.key)?.v as string) ?? 0) + o.by;
+      put(o.key, String(n), o.ttlSec);
       return n;
     });
-    persist();
-    return vals;
   },
 
   async hgetallMany(keys: string[]): Promise<Record<string, string>[]> {
@@ -133,7 +168,7 @@ export const store = {
         return o;
       });
     }
-    return keys.map((k) => ({ ...((live(k)?.v as Record<string, string>) ?? {}) }));
+    return keys.map((k) => ({ ...hashOf(k) }));
   },
 
   async setJSON(key: string, value: unknown, ttlSec: number): Promise<void> {
@@ -142,50 +177,145 @@ export const store = {
       await redis([["SET", key, v, "EX", ttlSec]]);
       return;
     }
-    mem().set(key, { v, exp: Date.now() + ttlSec * 1000 });
-    persist();
+    put(key, v, ttlSec, false);
   },
 
   async getJSON<T>(key: string): Promise<T | null> {
-    let raw: unknown;
-    if (this.remote) [raw] = await redis([["GET", key]]);
-    else raw = live(key)?.v;
-    if (typeof raw !== "string") return null;
-    try {
-      return JSON.parse(raw) as T;
-    } catch {
-      return null;
-    }
+    return (await this.getManyJSON<T>([key]))[0];
   },
 
-  async push(key: string, value: string, ttlSec: number): Promise<void> {
+  async getManyJSON<T>(keys: string[]): Promise<(T | null)[]> {
+    if (keys.length === 0) return [];
+    const raw: unknown[] = this.remote ? await redis([["MGET", ...keys]]).then((r) => (r[0] as unknown[]) ?? []) : keys.map((k) => live(k)?.v);
+    return keys.map((_, i) => {
+      const x = raw[i];
+      if (typeof x !== "string") return null;
+      try {
+        return JSON.parse(x) as T;
+      } catch {
+        return null;
+      }
+    });
+  },
+
+  /** RPUSH, keeping only the newest `max` items when given. */
+  async push(key: string, value: string, ttlSec: number, max?: number): Promise<void> {
     if (this.remote) {
-      await redis([
-        ["RPUSH", key, value],
-        ["EXPIRE", key, ttlSec],
-      ]);
+      const cmds: Cmd[] = [["RPUSH", key, value], ["EXPIRE", key, ttlSec]];
+      if (max) cmds.push(["LTRIM", key, -max, -1]);
+      await redis(cmds);
       return;
     }
-    const e = live(key);
-    const arr = Array.isArray(e?.v) ? e.v : [];
-    arr.push(value);
-    mem().set(key, { v: arr, exp: e?.exp ?? Date.now() + ttlSec * 1000 });
+    const v = live(key)?.v;
+    const arr = Array.isArray(v) ? [...v, value] : [value];
+    put(key, max ? arr.slice(-max) : arr, ttlSec);
   },
 
-  async list(key: string): Promise<string[]> {
+  async list(key: string, last?: number): Promise<string[]> {
     if (this.remote) {
-      const [r] = await redis([["LRANGE", key, 0, -1]]);
+      const [r] = await redis([["LRANGE", key, last ? -last : 0, -1]]);
       return (r as string[]) ?? [];
     }
     const v = live(key)?.v;
-    return Array.isArray(v) ? [...v] : [];
+    return Array.isArray(v) ? v.slice(last ? -last : 0) : [];
+  },
+
+  async llen(key: string): Promise<number> {
+    if (this.remote) {
+      const [r] = await redis([["LLEN", key]]);
+      return Number(r ?? 0);
+    }
+    const v = live(key)?.v;
+    return Array.isArray(v) ? v.length : 0;
   },
 
   async get(key: string): Promise<number> {
+    return (await this.getMany([key]))[0];
+  },
+
+  async getMany(keys: string[]): Promise<number[]> {
     if (this.remote) {
-      const [r] = await redis([["GET", key]]);
+      const [r] = await redis([["MGET", ...keys]]);
+      return ((r as unknown[]) ?? []).map((x) => Number(x ?? 0));
+    }
+    return keys.map((k) => Number((live(k)?.v as string) ?? 0));
+  },
+
+  /* ---- sorted sets ---- */
+
+  /** ZADD. With `lower`, an existing member only ever moves to a smaller score (a best time). */
+  async zadd(key: string, score: number, member: string, opts: { ttlSec?: number; lower?: boolean } = {}): Promise<void> {
+    if (this.remote) {
+      // LT still adds a member that is missing; it only refuses to raise one.
+      const cmds: Cmd[] = [opts.lower ? ["ZADD", key, "LT", score, member] : ["ZADD", key, score, member]];
+      if (opts.ttlSec) cmds.push(["EXPIRE", key, opts.ttlSec]);
+      await redis(cmds);
+      return;
+    }
+    const z = { ...zsetOf(key) };
+    if (!opts.lower || z[member] == null || score < z[member]) z[member] = score;
+    put(key, { zset: z }, opts.ttlSec);
+  },
+
+  async zincr(key: string, member: string, by = 1, ttlSec?: number): Promise<void> {
+    if (this.remote) {
+      const cmds: Cmd[] = [["ZINCRBY", key, by, member]];
+      if (ttlSec) cmds.push(["EXPIRE", key, ttlSec]);
+      await redis(cmds);
+      return;
+    }
+    const z = { ...zsetOf(key) };
+    z[member] = (z[member] ?? 0) + by;
+    put(key, { zset: z }, ttlSec);
+  },
+
+  /** Members by score, lowest first (or highest first with `rev`). */
+  async zrange(key: string, start: number, stop: number, rev = false): Promise<Scored[]> {
+    return (await this.zrangeMany([{ key, start, stop, rev }]))[0];
+  },
+
+  /** Several ZRANGEs in one round trip. */
+  async zrangeMany(specs: { key: string; start: number; stop: number; rev?: boolean }[]): Promise<Scored[][]> {
+    if (specs.length === 0) return [];
+    if (this.remote) {
+      const out = await redis(
+        specs.map((q) => (q.rev ? ["ZRANGE", q.key, q.start, q.stop, "REV", "WITHSCORES"] : ["ZRANGE", q.key, q.start, q.stop, "WITHSCORES"])),
+      );
+      return out.map(pairs);
+    }
+    return specs.map((q) => {
+      const all = sortedZ(q.key);
+      if (q.rev) all.reverse();
+      return all.slice(q.start, q.stop === -1 ? undefined : q.stop + 1);
+    });
+  },
+
+  async zrank(key: string, member: string): Promise<number | null> {
+    if (this.remote) {
+      const [r] = await redis([["ZRANK", key, member]]);
+      return r == null ? null : Number(r);
+    }
+    const i = sortedZ(key).findIndex((x) => x.member === member);
+    return i < 0 ? null : i;
+  },
+
+  async zcard(key: string): Promise<number> {
+    if (this.remote) {
+      const [r] = await redis([["ZCARD", key]]);
       return Number(r ?? 0);
     }
-    return Number((live(key)?.v as string) ?? 0);
+    return Object.keys(zsetOf(key)).length;
+  },
+
+  /** Keep only the `keep` lowest scores (or highest, with `rev`). */
+  async ztrim(key: string, keep: number, rev = false): Promise<void> {
+    if (this.remote) {
+      await redis([rev ? ["ZREMRANGEBYRANK", key, 0, -keep - 1] : ["ZREMRANGEBYRANK", key, keep, -1]]);
+      return;
+    }
+    const all = sortedZ(key);
+    const kept = rev ? all.slice(-keep) : all.slice(0, keep);
+    if (kept.length === all.length) return;
+    put(key, { zset: Object.fromEntries(kept.map((x) => [x.member, x.score])) });
   },
 };

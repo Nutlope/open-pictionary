@@ -66,6 +66,7 @@ const freshLane = (key: RacerKey): Internal => ({
 });
 
 const RECENT_KEY = "dd:recent-words";
+const BUZZER_MS = 2500;
 let guessSeq = 0;
 
 function recentWords(): string[] {
@@ -93,7 +94,13 @@ async function fetchDeal(extraExclude: string[] = []): Promise<Deal> {
   return res.json();
 }
 
-export function useRace(opts: { sketch: React.RefObject<SketchpadHandle | null>; apiKey: string; initial?: Deal | null }) {
+export function useRace(opts: {
+  sketch: React.RefObject<SketchpadHandle | null>;
+  apiKey: string;
+  initial?: Deal | null;
+  /** One fixed word (the daily): never deal another. */
+  fixed?: boolean;
+}) {
   const { sketch } = opts;
   const apiKeyRef = useRef(opts.apiKey);
   apiKeyRef.current = opts.apiKey;
@@ -107,6 +114,8 @@ export function useRace(opts: { sketch: React.RefObject<SketchpadHandle | null>;
   const [cost, setCost] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [demo, setDemo] = useState(false);
+  /** The result can no longer change: a win, a give-up, or the buzzer window has passed. */
+  const [final, setFinal] = useState(false);
 
   const L = useRef<Internal[]>(RACERS.map((r) => freshLane(r.key)));
   const phaseRef = useRef<Phase>(opts.initial ? "ready" : "loading");
@@ -121,6 +130,20 @@ export function useRace(opts: { sketch: React.RefObject<SketchpadHandle | null>;
   const recorded = useRef(false);
   const endReason = useRef<"won" | "timeout" | "gaveup" | null>(null);
   const loading = useRef(false);
+  const buzzer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const fixed = Boolean(opts.fixed);
+  const prefetch = useCallback(
+    (after: string) => {
+      if (fixed) return;
+      const p = fetchDeal([after]);
+      nextDeal.current = p;
+      p.catch(() => {
+        if (nextDeal.current === p) nextDeal.current = null;
+      });
+    },
+    [fixed],
+  );
 
   const publish = useCallback(() => {
     setLanes(L.current.map(({ ctrl, nextAt, lastInk, lastReplyAt, errors, ...pub }) => ({ ...pub, guesses: [...pub.guesses] })));
@@ -145,6 +168,9 @@ export function useRace(opts: { sketch: React.RefObject<SketchpadHandle | null>;
     endReason.current = why;
     setEndedAt(performance.now() - t0.current);
     setPhaseBoth(why === "won" ? "won" : "over");
+    // A guess asked before the horn can still land and win; wait it out.
+    if (why === "timeout") buzzer.current = setTimeout(() => setFinal(true), BUZZER_MS);
+    else setFinal(true);
   }, []);
 
   const load = useCallback(
@@ -155,6 +181,8 @@ export function useRace(opts: { sketch: React.RefObject<SketchpadHandle | null>;
       // The board is written when a round is left, so a buzzer-beater still counts.
       if (phaseRef.current === "won" || phaseRef.current === "over") settle();
       endReason.current = null;
+      clearTimeout(buzzer.current);
+      setFinal(false);
       roundSeq.current++;
       for (const l of L.current) l.ctrl?.abort();
       L.current = RACERS.map((r) => freshLane(r.key));
@@ -181,8 +209,7 @@ export function useRace(opts: { sketch: React.RefObject<SketchpadHandle | null>;
         rememberWord(d.word);
         setPhaseBoth("ready");
         // The next word is fetched now so "Next" is instant.
-        nextDeal.current = fetchDeal([d.word]);
-        nextDeal.current.catch(() => (nextDeal.current = null));
+        prefetch(d.word);
       } catch {
         setError("Could not reach the server. Check your connection and try again.");
         setPhaseBoth("loading");
@@ -190,8 +217,13 @@ export function useRace(opts: { sketch: React.RefObject<SketchpadHandle | null>;
         loading.current = false;
       }
     },
-    [publish, settle, sketch],
+    [publish, settle, sketch, prefetch],
   );
+
+  // The board is written once the result can no longer change.
+  useEffect(() => {
+    if (final) settle();
+  }, [final, settle]);
 
   useEffect(() => {
     const onHide = () => {
@@ -207,16 +239,18 @@ export function useRace(opts: { sketch: React.RefObject<SketchpadHandle | null>;
     if (first && phaseRef.current === "ready") {
       rememberWord(first.word);
       setDemo(!first.live && !apiKeyRef.current);
-      if (!nextDeal.current) {
-        nextDeal.current = fetchDeal([first.word]);
-        nextDeal.current.catch(() => (nextDeal.current = null));
-      }
+      if (!nextDeal.current) prefetch(first.word);
     } else {
       load();
     }
     const lanesNow = L;
-    return () => lanesNow.current.forEach((l) => l.ctrl?.abort());
-  }, [load]);
+    return () => {
+      lanesNow.current.forEach((l) => l.ctrl?.abort());
+      clearTimeout(buzzer.current);
+      // Leaving the page by a link (not a reload) still files the round.
+      if (phaseRef.current === "won" || phaseRef.current === "over") settle();
+    };
+  }, [load, settle, prefetch]);
 
   /** The first stroke starts the clock. */
   const begin = useCallback(() => {
@@ -293,16 +327,19 @@ export function useRace(opts: { sketch: React.RefObject<SketchpadHandle | null>;
                 recordSolve(lane.key, guess.at);
                 const p = phaseRef.current;
                 // Only the clock running out allows a late winner; giving up does not.
-                const buzzer =
-                  p === "over" && endReason.current === "timeout" && !winnerRef.current && guess.at <= RULES.roundSeconds * 1000 + 2500;
-                if (!winnerRef.current && (p === "drawing" || buzzer)) {
+                const late =
+                  p === "over" && endReason.current === "timeout" && !winnerRef.current && guess.at <= RULES.roundSeconds * 1000 + BUZZER_MS;
+                if (!winnerRef.current && (p === "drawing" || late)) {
                   winnerRef.current = lane.key;
                   lane.won = true;
                   setWinner(lane.key);
                   // A guess asked before the horn that lands just after it counts.
-                  if (buzzer) setPhaseBoth("won");
-                  else finish("won");
-                  sound.win();
+                  if (late) {
+                    clearTimeout(buzzer.current);
+                    setPhaseBoth("won");
+                    setFinal(true);
+                  } else finish("won");
+                  sound.win(RACERS.findIndex((r) => r.key === lane.key));
                 } else {
                   sound.solve();
                 }
@@ -395,6 +432,8 @@ export function useRace(opts: { sketch: React.RefObject<SketchpadHandle | null>;
     cost,
     error,
     demo,
+    final,
+    endReason: endReason.current,
     begin,
     nudge: tick,
     giveUp,

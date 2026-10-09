@@ -2,45 +2,67 @@
 
 import { useEffect, useId, useRef } from "react";
 import { motion, useAnimationControls } from "motion/react";
-import { RACER_BY_KEY, type RacerKey, type Shape } from "@/lib/racers";
+import { RACER_BY_KEY, type RacerKey } from "@/lib/racers";
+import { BODIES, CROWN_PATH, type Prim } from "@/lib/creatures";
 
 /* ------------------------------------------------------------------
    Gaze: one pointer listener and one animation loop for every creature
-   on the page. Pupils ease toward the pen; when the pen rests, they
-   drift back to the middle. Writes transforms straight to the DOM so
-   watching never re-renders React.
+   on the page. Pupils ease toward the pen; when the pen rests, each
+   creature glances around on its own, now and then. Writes transforms
+   straight to the DOM so watching never re-renders React.
    ------------------------------------------------------------------ */
 type Eye = { el: SVGGElement; x: number; y: number };
 const eyes = new Set<Eye>();
+const glances = new WeakMap<Element, { x: number; y: number; until: number }>();
 let pointer: { x: number; y: number; t: number } | null = null;
 let raf = 0;
+let timer: ReturnType<typeof setTimeout> | undefined;
 let listening = false;
+let calm = false;
+
+function glance(svg: Element, now: number) {
+  let g = glances.get(svg);
+  if (!g || now > g.until) {
+    const look = Math.random() < 0.42;
+    const a = Math.random() * Math.PI * 2;
+    g = { x: look ? Math.cos(a) * 2.7 : 0, y: look ? Math.sin(a) * 1.7 : 0, until: now + 1300 + Math.random() * 2900 };
+    glances.set(svg, g);
+  }
+  return g;
+}
 
 function loop() {
   raf = 0;
   const now = performance.now();
   const fresh = pointer && now - pointer.t < 2600;
   let moving = false;
+  let next = Infinity;
   for (const e of eyes) {
     let tx = 0;
     let ty = 0;
-    if (fresh && pointer) {
-      const r = e.el.ownerSVGElement?.getBoundingClientRect();
-      if (r) {
-        const dx = pointer.x - (r.left + r.width / 2);
-        const dy = pointer.y - (r.top + r.height * 0.6);
-        const d = Math.hypot(dx, dy) || 1;
-        const reach = Math.min(1, d / 160);
-        tx = (dx / d) * 3 * reach;
-        ty = (dy / d) * 3 * reach;
-      }
+    const svg = e.el.ownerSVGElement;
+    if (fresh && pointer && svg) {
+      const r = svg.getBoundingClientRect();
+      const dx = pointer.x - (r.left + r.width / 2);
+      const dy = pointer.y - (r.top + r.height * 0.6);
+      const d = Math.hypot(dx, dy) || 1;
+      const reach = Math.min(1, d / 160);
+      tx = (dx / d) * 3 * reach;
+      ty = (dy / d) * 3 * reach;
+    } else if (svg && !calm) {
+      const g = glance(svg, now);
+      tx = g.x;
+      ty = g.y;
+      next = Math.min(next, g.until);
     }
     e.x += (tx - e.x) * 0.22;
     e.y += (ty - e.y) * 0.22;
     if (Math.abs(tx - e.x) > 0.02 || Math.abs(ty - e.y) > 0.02) moving = true;
     e.el.style.transform = `translate(${e.x.toFixed(2)}px, ${e.y.toFixed(2)}px)`;
   }
+  clearTimeout(timer);
   if (moving || fresh) raf = requestAnimationFrame(loop);
+  else if (next < Infinity && eyes.size) timer = setTimeout(kick, next - now + 20);
 }
 
 function kick() {
@@ -56,6 +78,7 @@ export function lookAt(x: number, y: number) {
 function listen() {
   if (listening || typeof window === "undefined") return;
   listening = true;
+  calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const on = (e: PointerEvent) => {
     pointer = { x: e.clientX, y: e.clientY, t: performance.now() };
     kick();
@@ -65,39 +88,28 @@ function listen() {
 }
 
 /* ------------------------------------------------------------------
-   Bodies. 64x64 boxes, eyes placed per shape.
+   Bodies
    ------------------------------------------------------------------ */
-const BODY: Record<Shape, { eyeY: number; gap: number; draw: (c: string) => React.ReactNode }> = {
-  circle: { eyeY: 33, gap: 10, draw: (c) => <circle cx="32" cy="33" r="27" fill={c} /> },
-  square: { eyeY: 33, gap: 10, draw: (c) => <rect x="6" y="7" width="52" height="52" rx="15" fill={c} /> },
-  triangle: {
-    eyeY: 41,
-    gap: 9,
-    draw: (c) => <path d="M32 10 L57 54 L7 54 Z" fill={c} stroke={c} strokeWidth="9" strokeLinejoin="round" />,
-  },
-  pill: { eyeY: 33, gap: 11, draw: (c) => <rect x="3" y="14" width="58" height="38" rx="19" fill={c} /> },
-  drop: {
-    eyeY: 40,
-    gap: 9.5,
-    draw: (c) => <path d="M32 3 C 40 14, 57 28, 57 40 A 25 22 0 0 1 7 40 C 7 28, 24 14, 32 3 Z" fill={c} />,
-  },
-  flower: {
-    eyeY: 33,
-    gap: 9.5,
-    draw: (c) => (
-      <g fill={c}>
-        {Array.from({ length: 8 }, (_, i) => {
-          const a = (i / 8) * Math.PI * 2;
-          return <circle key={i} cx={32 + Math.cos(a) * 17} cy={33 + Math.sin(a) * 17} r="11" />;
-        })}
-        <circle cx="32" cy="33" r="19" />
-      </g>
-    ),
-  },
-};
+export function BodyShape({ prims, color, round }: { prims: Prim[]; color: string; round?: number }) {
+  return (
+    <g fill={color} stroke={round ? color : undefined} strokeWidth={round} strokeLinejoin="round">
+      {prims.map((p, i) =>
+        "c" in p ? (
+          <circle key={i} cx={p.c[0]} cy={p.c[1]} r={p.c[2]} />
+        ) : "r" in p ? (
+          <rect key={i} x={p.r[0]} y={p.r[1]} width={p.r[2]} height={p.r[3]} rx={p.r[4]} />
+        ) : (
+          <path key={i} d={p.d} />
+        ),
+      )}
+    </g>
+  );
+}
 
-export type Mood = "idle" | "thinking" | "happy" | "sad";
+export type Mood = "idle" | "thinking" | "happy" | "sad" | "sleepy";
 export type Pulse = { kind: "hop" | "shake" | "jump"; n: number } | null;
+
+const LID: Record<Mood, number> = { idle: 0, thinking: 0.5, happy: 0, sad: 0.12, sleepy: 0.86 };
 
 function Pupil({ cx, cy, mood }: { cx: number; cy: number; mood: Mood }) {
   const ref = useRef<SVGGElement>(null);
@@ -136,7 +148,7 @@ export function Creature({
   className?: string;
 }) {
   const r = RACER_BY_KEY[k];
-  const body = BODY[r.shape];
+  const body = BODIES[r.shape];
   const controls = useAnimationControls();
   const uid = useId();
   // Each creature blinks on its own rhythm.
@@ -161,11 +173,12 @@ export function Creature({
   const lx = 32 - body.gap;
   const rx = 32 + body.gap;
   const ey = body.eyeY;
+  const lid = LID[mood];
 
   return (
     <motion.div animate={controls} className={className} style={{ width: size, height: size, position: "relative", flexShrink: 0 }}>
       <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden className="overflow-visible">
-        {body.draw(r.color)}
+        <BodyShape prims={body.prims} color={r.color} round={body.round} />
         {mood === "happy" ? (
           <g stroke="#16130f" strokeWidth="3.2" strokeLinecap="round" fill="none">
             <path d={`M${lx - 5} ${ey + 1.5} Q ${lx} ${ey - 5} ${lx + 5} ${ey + 1.5}`} />
@@ -177,14 +190,17 @@ export function Creature({
             <ellipse cx={rx} cy={ey} rx="6.6" ry="7.6" fill="#fff" />
             <Pupil cx={lx} cy={ey} mood={mood} />
             <Pupil cx={rx} cy={ey} mood={mood} />
-            {/* Lids drop halfway while it thinks. */}
-            <g className={mood === "thinking" ? "creature-think" : undefined}>
-              <rect className="lid" x={lx - 7.5} y={ey - 9} width="15" height="8.2" fill={r.color} />
-              <rect className="lid" x={rx - 7.5} y={ey - 9} width="15" height="8.2" fill={r.color} />
-            </g>
+            {/* Lids: half down while it thinks, nearly shut when it dozes. */}
+            <rect className="lid" x={lx - 7.5} y={ey - 8.4} width="15" height="16.8" fill={r.color} style={{ transform: `scaleY(${lid})` }} />
+            <rect className="lid" x={rx - 7.5} y={ey - 8.4} width="15" height="16.8" fill={r.color} style={{ transform: `scaleY(${lid})` }} />
           </g>
         )}
       </svg>
+      {mood === "sleepy" ? (
+        <span aria-hidden className="creature-z pointer-events-none absolute font-extrabold text-ink" style={{ left: size * 0.78, top: -size * 0.12, fontSize: Math.max(10, size * 0.3) }}>
+          z
+        </span>
+      ) : null}
       {crown ? (
         <motion.svg
           viewBox="0 0 32 22"
@@ -194,7 +210,7 @@ export function Creature({
           transition={{ type: "spring", stiffness: 420, damping: 14, delay: 0.15 }}
           style={{ position: "absolute", width: size * 0.55, left: size * 0.06, top: -size * 0.32 }}
         >
-          <path d="M3 19 L1.5 5 L9.5 11 L16 2 L22.5 11 L30.5 5 L29 19 Z" fill="#FFC531" stroke="#16130f" strokeWidth="2" strokeLinejoin="round" />
+          <path d={CROWN_PATH} fill="#FFC531" stroke="#16130f" strokeWidth="2" strokeLinejoin="round" />
         </motion.svg>
       ) : null}
     </motion.div>

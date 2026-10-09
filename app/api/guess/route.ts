@@ -1,6 +1,7 @@
+import { after } from "next/server";
 import { readRound } from "@/lib/server/round";
 import { askRacer, houseKey, judge, type GuessHistory } from "@/lib/server/together";
-import { houseAllowance, notePlayed, noteSolved, noteSpend } from "@/lib/server/stats";
+import { houseAllowance, notePlayed, noteSolved, noteSpend, noteWrong } from "@/lib/server/stats";
 import { logGuess } from "@/lib/server/share";
 import { RACER_BY_KEY, isRacerKey, type RacerKey } from "@/lib/racers";
 import { findWord, WORDS } from "@/lib/words";
@@ -74,6 +75,11 @@ export async function POST(req: Request) {
     if (!allow.ok) return errorResponse(allow.reason, 429);
   }
 
+  // Bookkeeping that the player does not wait for runs after the response.
+  const later: Promise<unknown>[] = [];
+  const defer = (p: Promise<unknown>) => later.push(p.catch(() => {}));
+  after(() => Promise.all(later));
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const enc = new TextEncoder();
@@ -81,24 +87,23 @@ export async function POST(req: Request) {
       try {
         if (!apiKey) {
           const d = await demoGuess(word.word, history, racerKey, send);
-          await logGuess(round.id, { k: racerKey, g: d.guess, v: d.verdict, t: Math.round(elapsedMs + d.ms) }).catch(() => {});
+          defer(logGuess(round.id, { k: racerKey, g: d.guess, v: d.verdict, t: Math.round(elapsedMs + d.ms) }));
           return;
         }
 
         const out = await askRacer({ racer, image: body.image as string, history, apiKey, signal: req.signal });
         send({ type: "guess", guess: out.guess, latencyMs: out.latencyMs, costUsd: out.costUsd, mode: "live" });
 
-        const [{ verdict, costUsd: judgeCost }] = await Promise.all([
-          judge(out.guess, word.word, word.also, apiKey),
-          notePlayed(round.id, racerKey).catch(() => {}),
-        ]);
-        let won = false;
-        if (verdict === "correct") {
-          won = await noteSolved(round.id, racerKey, elapsedMs + out.latencyMs).catch(() => false);
-        }
+        const t = Math.round(elapsedMs + out.latencyMs);
+        const { verdict, costUsd: judgeCost } = await judge(out.guess, word.word, word.also, apiKey);
+        // The win is written before the verdict goes out, so a daily post
+        // made the moment the round ends can read it back.
+        const won = verdict === "correct" ? await noteSolved(round.id, racerKey, t, word.word).catch(() => false) : false;
         send({ type: "verdict", verdict, won, costUsd: judgeCost });
-        logGuess(round.id, { k: racerKey, g: out.guess, v: verdict, t: Math.round(elapsedMs + out.latencyMs) }).catch(() => {});
-        if (!userKey) noteSpend(out.costUsd + judgeCost).catch(() => {});
+        defer(notePlayed(round.id, racerKey));
+        defer(logGuess(round.id, { k: racerKey, g: out.guess, v: verdict, t }));
+        if (verdict === "wrong") defer(noteWrong(racerKey, out.guess, word.word));
+        if (!userKey) defer(noteSpend(out.costUsd + judgeCost));
       } catch (e) {
         if (req.signal.aborted) return;
         const msg = e instanceof Error ? e.message : String(e);

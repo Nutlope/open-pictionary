@@ -12,8 +12,11 @@
 - Six models on Together AI serverless: Kimi K3, DeepSeek V4.1 Flash, Qwen3.7 Plus, Qwen3.5 9B, GLM-5.3 Flash, MiniMax M3, each with its own thinking-off switch in `lib/racers.ts`
 - Each look streams a 384px crop of the ink; slow looks are hedged with a twin request after 2.8s, and guesses come back as NDJSON so they land before the verdict
 - Referee: a synonym list per word, then GLM-5.3 Flash for anything the list cannot settle; rounds are HMAC-signed tickets, so judging and the global board stay server side
-- Share links replay the round stroke by stroke; with Redis they are short ids, without it the replay rides in the link, compressed and signed
-- Optional Upstash Redis (REST) for the global board, rate limits and short links; local dev falls back to `.data/store.json`
+- Share links replay the round stroke by stroke with the word hidden and a box for friends to guess it first; with Redis they are short ids, without it the replay rides in the link, compressed and signed
+- Daily doodle at `/daily`: one word a day from a fixed shuffle of the deck, one try, a board of the fastest guessed doodles, and a pasteable heart line per result
+- Video clips are drawn frame by frame on a canvas and encoded to H.264 MP4 in the browser (WebCodecs plus Mediabunny, loaded on demand)
+- Streaks, personal bests and champion picks live in the browser; model cards, the live counter and the wrong guess of the day (picked by Qwen3.7 Plus from the day's misses) come from the store
+- Optional Upstash Redis (REST) for the global board, dailies, rate limits and short links; local dev falls back to `.data/store.json`
 
 ## Cloning & running
 
@@ -25,9 +28,10 @@
 
 ## Roadmap
 
-- [ ] hook up Upstash in production so the global board and short links persist
-- [ ] add a daily word everyone draws, with its own board
+- [ ] hook up Upstash in production so the boards, dailies, counter and short links are shared by every server
+- [x] add a daily word everyone draws, with its own board
 - [ ] let me pick a pen color without changing what the models see
+- [ ] add a report button to daily thumbnails before the board gets busy
 - [ ] re-run the model probe monthly and swap in new vision models as they land
 - Multiplayer drawing is skipped on purpose: the race is you against the models, and a second artist muddies who made them guess.
 

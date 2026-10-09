@@ -4,6 +4,7 @@ import { getShare } from "@/lib/server/share";
 import { RACER_BY_KEY } from "@/lib/racers";
 import { fmtSec } from "@/lib/replay";
 import { Replay } from "@/components/game/Replay";
+import { findWord } from "@/lib/words";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const doc = await getShare(id);
   if (!doc) return { title: "doodle derby" };
   const w = doc.winner ? RACER_BY_KEY[doc.winner] : null;
-  const title = w && doc.winMs != null ? `${w.label} guessed my doodle in ${fmtSec(doc.winMs)}` : "Six AIs couldn't guess my doodle";
-  const description = "Watch the replay: six open AI models race to guess a doodle, live. Then beat the time on the same word.";
+  const title = w && doc.winMs != null ? `${w.label} guessed my doodle in ${fmtSec(doc.winMs)}. Can you beat it?` : "Six AIs couldn't guess my doodle. Can you?";
+  const description = "Watch the doodle draw itself and type your guess before six AI models get it. Then draw your own.";
   return {
     title: `${title} · doodle derby`,
     description,
@@ -28,5 +29,5 @@ export default async function SharedRound({ params }: Props) {
   const { id } = await params;
   const doc = await getShare(id);
   if (!doc) notFound();
-  return <Replay doc={doc} />;
+  return <Replay doc={doc} also={findWord(doc.word)?.also ?? []} />;
 }
