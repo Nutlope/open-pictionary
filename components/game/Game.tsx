@@ -276,7 +276,7 @@ export function Game({ initial, challenge: challengeIn }: { initial?: Deal | nul
         </AnimatePresence>
 
         {/* ---------------- header ---------------- */}
-        <header className="relative z-30 mx-auto flex w-full max-w-[1200px] items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-5">
+        <header className="relative z-30 mx-auto flex w-full max-w-[1680px] items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-5 lg:px-8">
           <DerbyWordmark />
           <nav className="flex items-center gap-2">
             <button type="button" className="pill" onClick={() => setBoardOpen(true)} aria-label="Leaderboard">
@@ -548,7 +548,7 @@ export function Game({ initial, challenge: challengeIn }: { initial?: Deal | nul
         </main>
 
         {/* ---------------- footer ---------------- */}
-        <footer className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 pb-5 sm:px-6">
+        <footer className="mx-auto flex w-full max-w-[1680px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 pb-5 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <TogetherCredit />
             <span className="tx-small text-ink-3">Model list and prices checked {LAST_UPDATED}</span>

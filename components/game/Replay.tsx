@@ -131,7 +131,7 @@ export function Replay({ doc }: { doc: ReplayDoc }) {
     <MotionConfig reducedMotion="user">
       <style>{`body{--room:${room}}`}</style>
       <div className="relative isolate flex min-h-dvh flex-col">
-        <header className="mx-auto flex w-full max-w-[1200px] items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-5">
+        <header className="mx-auto flex w-full max-w-[1680px] items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-5 lg:px-8">
           <DerbyWordmark />
           <a href="/" className="pill pill-ink">
             Play
@@ -274,7 +274,7 @@ export function Replay({ doc }: { doc: ReplayDoc }) {
           </aside>
         </main>
 
-        <footer className="mx-auto flex w-full max-w-[1200px] items-center justify-between gap-4 px-4 pb-5 sm:px-6">
+        <footer className="mx-auto flex w-full max-w-[1680px] items-center justify-between gap-4 px-4 pb-5 sm:px-6 lg:px-8">
           <TogetherCredit />
         </footer>
       </div>
