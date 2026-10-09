@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { IconCheck, IconPencil, IconTrophy, IconVolume, IconVolumeOff } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { onSoundChange, setSoundOn, soundOn } from "./sound";
+import { board } from "./live";
 
 const spring = { type: "spring", stiffness: 480, damping: 34 } as const;
 
@@ -51,11 +52,14 @@ type ItemProps = { id: string; icon?: boolean; className?: string; children: Rea
   | ({ href?: undefined } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children" | "id">)
 );
 
-export function DockItem({ id, icon, className, children, ...rest }: ItemProps) {
+export function DockItem({ id, icon, className, children, onWarm, ...rest }: ItemProps & { onWarm?: () => void }) {
   const { set } = useContext(Hot);
   const cls = cn("dock-item", icon && "dock-item-icon", className);
   // Touch has no hover: a tap must not leave the highlight behind.
-  const enter = (e: React.PointerEvent) => e.pointerType === "mouse" && set(id);
+  const enter = (e: React.PointerEvent) => {
+    onWarm?.();
+    if (e.pointerType === "mouse") set(id);
+  };
   const inner = (
     <>
       <Glow id={id} />
@@ -109,8 +113,10 @@ export function SoundToggle({ inDock, className }: { inDock?: boolean; className
 }
 
 export function BoardButton({ onClick }: { onClick: () => void }) {
+  // Reaching for it is enough to start loading the board, so it opens full.
+  const warm = () => void board.refresh();
   return (
-    <DockItem id="board" onClick={onClick} aria-label="Leaderboard" className="max-sm:w-9 max-sm:justify-center max-sm:px-0">
+    <DockItem id="board" onClick={onClick} onWarm={warm} onFocus={warm} aria-label="Leaderboard" className="max-sm:w-9 max-sm:justify-center max-sm:px-0">
       <IconTrophy size={17} stroke={2} />
       <span className="hidden sm:inline">Leaderboard</span>
     </DockItem>

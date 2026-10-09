@@ -192,6 +192,24 @@ function GuessText({ g, big }: { g: LaneGuess; big?: boolean }) {
   );
 }
 
+/** The player's champion, marked with a heart in its color. */
+function PickHeart({ color, badge }: { color: string; badge?: boolean }) {
+  return (
+    <motion.span
+      key="pick"
+      initial={{ scale: 0, rotate: -30 }}
+      animate={{ scale: 1, rotate: 0 }}
+      exit={{ scale: 0 }}
+      transition={{ type: "spring", stiffness: 600, damping: 18 }}
+      className={cn("flex shrink-0", badge && "absolute -right-1 -bottom-0.5 rounded-full bg-white p-[2px] shadow-[var(--lift)]")}
+      title="Your pick"
+      style={{ color }}
+    >
+      <IconHeartFilled size={badge ? 10 : 14} />
+    </motion.span>
+  );
+}
+
 export function LaneRow({
   lane,
   phase,
@@ -246,30 +264,19 @@ export function LaneRow({
           boxShadow: isWinner ? "0 0 0 2.5px var(--ink), var(--lift-hi)" : "var(--lift)",
         }}
       >
-        <div className="flex items-center gap-3">
-          <Creature k={lane.key} size={compact ? 34 : 46} mood={mood} pulse={pulse} crown={isWinner} />
+        <div className={cn("flex items-center", compact ? "gap-2" : "gap-3")}>
+          <span className="relative shrink-0">
+            <Creature k={lane.key} size={compact ? 34 : 46} mood={mood} pulse={pulse} crown={isWinner} />
+            {/* On a half-width lane the heart rides on the creature, so the name keeps its room. */}
+            <AnimatePresence>{picked && compact ? <PickHeart color={racer.color} badge /> : null}</AnimatePresence>
+          </span>
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <span className={cn("truncate", compact ? "tx-small font-semibold text-ink-2" : "tx-name")}>
                 {compact ? racer.short : racer.label}
               </span>
-              <AnimatePresence>
-                {picked ? (
-                  <motion.span
-                    key="pick"
-                    initial={{ scale: 0, rotate: -30 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    exit={{ scale: 0 }}
-                    transition={{ type: "spring", stiffness: 600, damping: 18 }}
-                    className="flex shrink-0"
-                    title="Your pick"
-                    style={{ color: racer.color }}
-                  >
-                    <IconHeartFilled size={compact ? 12 : 14} />
-                  </motion.span>
-                ) : null}
-              </AnimatePresence>
+              <AnimatePresence>{picked && !compact ? <PickHeart color={racer.color} /> : null}</AnimatePresence>
               {!compact ? <span className="tx-small truncate text-ink-3">{racer.lab}</span> : null}
             </div>
 

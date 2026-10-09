@@ -28,7 +28,7 @@ import { FieldHead, FieldList, Ticker, WrongCard } from "./Field";
 import { Level, StreakChip, Word } from "./Word";
 import { lanesAt, solveOrder, standings } from "./lanes";
 import { liveDailyStreak, readMe, recordDaily, recordOutcome, updateDaily, useMe, type DailyRecord, type Outcome } from "./me";
-import { pulse as pulseStore, usePulse, type Pulse } from "./live";
+import { board as boardStore, pulse as pulseStore, usePulse, type Pulse } from "./live";
 import { resultText } from "./result";
 import { sound } from "./sound";
 import type { ClipDoc } from "./clip";
@@ -284,6 +284,13 @@ export function Game({
     },
     [deal, d],
   );
+
+  // The board is about to be the next thing people look at; have it ready.
+  useEffect(() => {
+    if (!race.final) return;
+    const t = setTimeout(() => boardStore.refresh(true), 2500);
+    return () => clearTimeout(t);
+  }, [race.final]);
 
   useEffect(() => {
     if (!race.final || !deal || done || settled.current === deal.token) return;
