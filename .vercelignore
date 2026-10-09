@@ -1,0 +1,5 @@
+.data
+.env*.local
+.claude
+node_modules
+.next
