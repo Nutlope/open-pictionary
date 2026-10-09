@@ -16,6 +16,17 @@ function secret() {
 
 const b64 = (b: Buffer) => b.toString("base64url");
 
+/** A short HMAC tag, for anything else the server hands out and must not be forged. */
+export function tag(data: string, bytes = 9) {
+  return b64(createHmac("sha256", secret()).update(`tag:${data}`).digest().subarray(0, bytes));
+}
+
+export function tagOk(data: string, t: string, bytes = 9) {
+  const want = Buffer.from(tag(data, bytes));
+  const got = Buffer.from(t);
+  return want.length === got.length && timingSafeEqual(want, got);
+}
+
 export function mintRound(word: string): { token: string; round: Round } {
   const round: Round = { id: b64(randomBytes(9)), word, t: Date.now() };
   const body = b64(Buffer.from(JSON.stringify(round)));

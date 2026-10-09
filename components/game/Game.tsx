@@ -207,7 +207,15 @@ export function Game({ initial, challenge: challengeIn }: { initial?: Deal | nul
       const res = await fetch("/api/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ round: deal.token, strokes: packStrokes(pad.current.strokes(), race.startedAt), byok: Boolean(apiKey) }),
+        body: JSON.stringify({
+          round: deal.token,
+          strokes: packStrokes(pad.current.strokes(), race.startedAt),
+          byok: Boolean(apiKey),
+          // The server prefers its own log; this is the fallback when it has none.
+          log: lanes.flatMap((l) =>
+            l.guesses.filter((g) => g.verdict !== "pending").map((g) => ({ k: l.key, g: g.text, v: g.verdict, t: Math.round(g.at) })),
+          ),
+        }),
       });
       const j = (await res.json().catch(() => ({}))) as { id?: string; url?: string; error?: string };
       if (!j.id || !j.url) {
@@ -224,7 +232,7 @@ export function Game({ initial, challenge: challengeIn }: { initial?: Deal | nul
     } finally {
       setSharing(false);
     }
-  }, [deal, race.startedAt, apiKey, winnerLane]);
+  }, [deal, race.startedAt, apiKey, winnerLane, lanes]);
 
   /* ---------------- keys ---------------- */
   useEffect(() => {

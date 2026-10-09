@@ -220,7 +220,7 @@ export function Replay({ doc }: { doc: ReplayDoc }) {
                         <div className="min-w-0 flex-1 max-sm:basis-[calc(100%-60px)]">
                           <p className="tx-name truncate">{winner ? `Your turn. Beat ${fmtSec(doc.winMs ?? 0)}` : "Your turn. Make them get it"}</p>
                           <p className="tx-small mt-0.5 truncate text-white/60">
-                            Same word, same six models{solvers > 1 ? ` · ${solvers} of 6 got it` : ""}
+                            {solvers > 0 ? `${solvers} of 6 models got it` : "none of the six got it"}
                           </p>
                         </div>
                         <button type="button" onClick={play} aria-label="Watch again" title="Watch again" className="pill pill-icon shrink-0 bg-white/12 text-white shadow-none hover:bg-white/20">
