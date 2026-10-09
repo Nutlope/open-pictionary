@@ -1,0 +1,360 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Doodle Derby
+   One typeface (Bricolage Grotesque, opsz + wdth + wght axes),
+   a room color that changes every round, white "sticker" cards,
+   and six creatures who each own a color.
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+  --room: #ffd84a;
+  --ink: #16130f;
+  --ink-2: rgb(22 19 15 / 0.66);
+  --ink-3: rgb(22 19 15 / 0.42);
+  --ink-4: rgb(22 19 15 / 0.14);
+  --line: rgb(22 19 15 / 0.08);
+  --card: #ffffff;
+  --card-2: #f6f3ee;
+  --close: #b45309;
+  --close-soft: #fff1d6;
+  --bad: #c2271b;
+  --bad-soft: #ffe4e0;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --lift: 0 1px 0 rgb(22 19 15 / 0.04), 0 1px 2px rgb(22 19 15 / 0.06), 0 8px 24px -12px rgb(22 19 15 / 0.22);
+  --lift-hi: 0 1px 0 rgb(22 19 15 / 0.04), 0 2px 4px rgb(22 19 15 / 0.06), 0 16px 36px -14px rgb(22 19 15 / 0.32);
+  --float: 0 2px 0 rgb(22 19 15 / 0.05), 0 30px 70px -28px rgb(22 19 15 / 0.45), 0 12px 24px -16px rgb(22 19 15 / 0.2);
+}
+
+@theme inline {
+  --color-room: var(--room);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-line: var(--line);
+  --color-card: var(--card);
+  --color-card-2: var(--card-2);
+  --color-close: var(--close);
+  --color-close-soft: var(--close-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --font-sans: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --ease-out: var(--ease-out);
+  --ease-spring: var(--ease-spring);
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--line);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
+    overscroll-behavior: none;
+  }
+  body {
+    overflow-x: clip;
+    overscroll-behavior: none;
+    background-color: var(--room);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
+    font-feature-settings: "ss01";
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.7s var(--ease-out);
+  }
+  ::selection {
+    background: var(--ink);
+    color: var(--room);
+  }
+  :focus-visible {
+    outline: 2.5px solid var(--ink);
+    outline-offset: 3px;
+    border-radius: 10px;
+  }
+  button {
+    cursor: pointer;
+  }
+}
+
+/* ------------------------------------------------------------
+   Type. One family, many voices via its axes.
+   ------------------------------------------------------------ */
+@layer components {
+  .tx-word {
+    font-size: clamp(2.4rem, 1.6rem + 2.6vw, 3.4rem);
+    line-height: 0.95;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    font-variation-settings: "opsz" 96, "wdth" 82;
+  }
+  .tx-display {
+    font-size: 1.5rem;
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    font-variation-settings: "opsz" 72, "wdth" 88;
+  }
+  .tx-guess {
+    font-size: 1.375rem;
+    line-height: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variation-settings: "opsz" 48, "wdth" 90;
+  }
+  .tx-name {
+    font-size: 0.9375rem;
+    line-height: 1.2;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .tx-body {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    font-weight: 450;
+    letter-spacing: -0.005em;
+  }
+  .tx-small {
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  /* Labels stay in sentence case: weight and a quieter ink do the work caps used to. */
+  .tx-label {
+    font-size: 0.8125rem;
+    line-height: 1.2;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    font-variation-settings: "opsz" 24, "wdth" 92;
+  }
+  .tx-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "ss01";
+  }
+}
+
+/* ------------------------------------------------------------
+   Surfaces and controls
+   ------------------------------------------------------------ */
+@layer components {
+  .sticker {
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: var(--lift);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 2.5rem;
+    padding: 0 0.95rem;
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    box-shadow: var(--lift);
+    transition:
+      transform 0.25s var(--ease-spring),
+      box-shadow 0.25s var(--ease-out),
+      opacity 0.2s;
+  }
+  .pill:hover {
+    transform: translateY(-1.5px);
+    box-shadow: var(--lift-hi);
+  }
+  .pill:active {
+    transform: translateY(0) scale(0.95);
+    transition-duration: 0.08s;
+  }
+  .pill:disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+  .pill-ghost {
+    background: rgb(255 255 255 / 0.32);
+    box-shadow: none;
+  }
+  .pill-ghost:hover {
+    background: rgb(255 255 255 / 0.6);
+    box-shadow: none;
+  }
+  .pill-ink {
+    background: var(--ink);
+    color: #fff;
+  }
+  .pill-icon {
+    width: 2.5rem;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+/* The paper column is sized by viewport height so the table fits one screen. */
+.paper-col {
+  width: min(100%, max(300px, calc(100dvh - 420px)));
+}
+@media (min-width: 1024px) {
+  .paper-col {
+    width: min(100%, max(400px, calc(100dvh - 300px)));
+  }
+}
+.paper {
+  box-shadow: var(--float);
+}
+
+/* A wrong guess is struck through, drawn left to right like a pen. */
+.is-wrong .strike {
+  position: relative;
+}
+.is-wrong .strike::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  top: 54%;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform-origin: left center;
+  animation: strike 0.34s var(--ease-out) both;
+}
+
+.trail-fade {
+  -webkit-mask-image: linear-gradient(to right, #000 72%, transparent);
+  mask-image: linear-gradient(to right, #000 72%, transparent);
+}
+
+/* Creatures */
+.creature-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 5.2s infinite;
+}
+.creature-think .lid {
+  transform: scaleY(1);
+}
+.lid {
+  transform-box: fill-box;
+  transform-origin: top center;
+  transform: scaleY(0);
+  transition: transform 0.25s var(--ease-out);
+}
+.think-dot {
+  animation: think 0.9s ease-in-out infinite;
+}
+.clock-ring {
+  animation: ring linear forwards;
+}
+.clock-urgent {
+  animation: urgent 1s ease-in-out infinite;
+}
+.burst-fleck {
+  animation: burst 1s cubic-bezier(0.16, 0.8, 0.3, 1) both;
+}
+.idle-bob {
+  animation: bob 3.4s ease-in-out infinite;
+}
+
+@keyframes strike {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.08);
+  }
+}
+@keyframes think {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  45% {
+    opacity: 1;
+    transform: translateY(-2.5px);
+  }
+}
+@keyframes ring {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: var(--len);
+  }
+}
+@keyframes urgent {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+@keyframes burst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(0.4);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--x), calc(var(--y) + 70px)) rotate(var(--r)) scale(1);
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
+  .creature-blink,
+  .think-dot,
+  .clock-urgent,
+  .burst-fleck,
+  .idle-bob,
+  .is-wrong .strike::after {
+    animation: none;
+  }
+  .clock-ring {
+    animation: none;
+  }
+  .burst {
+    display: none;
+  }
+  .pill,
+  .pill:hover,
+  .pill:active {
+    transform: none;
+  }
+}
