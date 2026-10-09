@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { outlinePaths } from "@/lib/doodle";
 
-/** A doodle as a tiny SVG, cropped to its ink. Strokes are [x, y, ...] or [x, y, t, ...]. */
+/** A doodle as a tiny SVG, cropped to its ink, with a pen heavy enough to read at that size. Strokes are [x, y, ...] or [x, y, t, ...]. */
 export function Thumb({ strokes, stride = 2, className }: { strokes: number[][]; stride?: 2 | 3; className?: string }) {
-  const { paths, viewBox } = useMemo(() => outlinePaths(strokes, stride), [strokes, stride]);
+  const { paths, viewBox } = useMemo(() => outlinePaths(strokes, stride, 0.045), [strokes, stride]);
   return (
     <svg viewBox={viewBox} className={className} aria-hidden>
       {paths.map((d, i) => (

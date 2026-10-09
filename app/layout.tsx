@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: `${BRAND.name} · draw, and six AI models race to guess it`,
   description:
-    "Draw a word and watch six open vision models (Kimi K3, DeepSeek V4.1, Qwen3.7, Qwen3.5 9B, GLM-5.3, MiniMax M3) guess live. First correct guess wins. Free to play.",
+    "Draw a word and watch six open vision models (Kimi K3, DeepSeek V4.1, Qwen3.8 Flash, Muse Glimmer, GLM-5.3, MiniMax M3) guess live. First correct guess wins. Free to play.",
   openGraph: { title: BRAND.name, description: BRAND.tagline, type: "website" },
   twitter: { card: "summary_large_image", title: BRAND.name, description: BRAND.tagline },
 };

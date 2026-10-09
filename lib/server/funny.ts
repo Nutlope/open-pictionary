@@ -32,7 +32,7 @@ export async function latestFunny(): Promise<Pick | null> {
   return a ?? b;
 }
 
-const CURATOR = RACER_BY_KEY["qwen3-7-plus"];
+const CURATOR = RACER_BY_KEY["qwen3-8-flash"];
 const SYSTEM = [
   "You pick the funniest wrong answers from a drawing game where AI models guess people's doodles.",
   "Funny means absurd, oddly specific, dramatic or poetic misreadings. A near miss (dog for cat) or a plain everyday object is not funny.",

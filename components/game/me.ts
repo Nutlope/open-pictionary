@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { RacerKey } from "@/lib/racers";
+import { seatOf, type RacerKey } from "@/lib/racers";
 import { randomName } from "@/lib/names";
 import type { ReplayGuess } from "@/lib/replay";
 
@@ -70,6 +70,30 @@ function fresh(): Me {
 
 let cache: Me | null = null;
 
+/** Records saved before a seat changed models carry the old key; move them to the seat's current one. */
+function reseat(m: Me): Me {
+  const ks = (list: unknown[]) => list.map(seatOf).filter((k): k is RacerKey => k != null);
+  if (m.best) {
+    const k = seatOf(m.best.k);
+    m.best = k ? { ...m.best, k } : null;
+  }
+  const by: Me["picks"]["by"] = {};
+  for (const [old, v] of Object.entries(m.picks.by)) {
+    const k = seatOf(old);
+    if (k && v) by[k] = v;
+  }
+  m.picks.by = by;
+  for (const day of Object.values(m.daily.days)) {
+    day.k = seatOf(day.k);
+    day.order = ks(day.order ?? []);
+    day.log = (day.log ?? []).flatMap((e) => {
+      const k = seatOf(e.k);
+      return k ? [{ ...e, k }] : [];
+    });
+  }
+  return m;
+}
+
 export function readMe(): Me {
   if (typeof window === "undefined") return fresh();
   if (cache) return cache;
@@ -77,7 +101,7 @@ export function readMe(): Me {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "null") as Me | null;
     if (raw?.v === 1 && raw.id) {
       const base = fresh();
-      cache = { ...base, ...raw, picks: { ...base.picks, ...raw.picks }, daily: { ...base.daily, ...raw.daily } };
+      cache = reseat({ ...base, ...raw, picks: { ...base.picks, ...raw.picks }, daily: { ...base.daily, ...raw.daily } });
       return cache;
     }
   } catch {}

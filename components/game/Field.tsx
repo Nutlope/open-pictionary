@@ -43,7 +43,7 @@ export function FieldHead({ today, note }: { today: number | null; note?: string
           {today === 1 ? "doodle today" : "doodles today"}
         </p>
       ) : (
-        <p className="tx-small text-ink-2">{note ?? "six open models, five labs"}</p>
+        <p className="tx-small text-ink-2">{note ?? "one open model from each lab"}</p>
       )}
     </div>
   );

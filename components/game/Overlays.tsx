@@ -110,7 +110,8 @@ export function Lineup({
       </AnimatePresence>
 
       <div className="absolute inset-x-0 bottom-0 flex flex-col items-center">
-        <div className="tx-small mb-1 flex h-6 items-center text-ink-3">
+        {/* A creature talking takes the line; the hint steps aside so the two never overlap. */}
+        <motion.div className="tx-small mb-1 flex h-6 items-center text-ink-3" animate={{ opacity: line ? 0 : 1 }} transition={{ duration: 0.18 }}>
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.span
               key={backed?.key ?? "ask"}
@@ -130,7 +131,7 @@ export function Lineup({
               )}
             </motion.span>
           </AnimatePresence>
-        </div>
+        </motion.div>
         <div className="flex justify-center gap-2 sm:gap-2.5" role="radiogroup" aria-label="Back a model to win">
           {RACERS.map((r, i) => {
             const on = pick === r.key;

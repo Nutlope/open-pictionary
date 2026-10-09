@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { IconKey } from "@tabler/icons-react";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
+import { DockItem } from "./Nav";
 
 /**
  * Bring your own Together key. It lives in this browser's localStorage only and
@@ -13,6 +14,12 @@ import { cn } from "@/lib/utils";
  */
 const STORAGE_KEY = "together:api-key";
 const EVENT = "together:key-change";
+const OPEN = "together:key-open";
+
+/** Opens the key form from anywhere, e.g. a "free play is full" message. */
+export function openKeyForm() {
+  window.dispatchEvent(new Event(OPEN));
+}
 
 export function useTogetherKey() {
   const [apiKey, setState] = useState("");
@@ -40,11 +47,23 @@ export function useTogetherKey() {
   return { apiKey, setApiKey, hasKey: apiKey.length > 0 };
 }
 
-export function KeyControl({ className, align = "right" }: { className?: string; align?: "right" | "left" }) {
+/**
+ * In the header dock it is a quiet key icon (a green dot once a key is set);
+ * in the footer, a ghost pill whose form opens upward.
+ */
+export function KeyControl({ className, inDock }: { className?: string; inDock?: boolean }) {
   const { apiKey, setApiKey, hasKey } = useTogetherKey();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const input = useRef<HTMLInputElement>(null);
+  const root = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Only the copy on screen answers: the header and footer each hold one.
+    const show = () => root.current?.offsetParent !== null && setOpen(true);
+    window.addEventListener(OPEN, show);
+    return () => window.removeEventListener(OPEN, show);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -63,12 +82,20 @@ export function KeyControl({ className, align = "right" }: { className?: string;
     setOpen(false);
   };
 
+  const label = hasKey ? "Your Together key" : "Use your own Together key";
   return (
-    <div className={cn("relative", className)}>
-      <button type="button" className="pill" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-        {hasKey ? <span className="size-2 rounded-full bg-[#00A870]" aria-hidden /> : <IconKey size={16} stroke={2} />}
-        <span>{hasKey ? "Your key" : "Use your key"}</span>
-      </button>
+    <div ref={root} className={cn("relative", className)}>
+      {inDock ? (
+        <DockItem id="key" icon aria-expanded={open} aria-label={label} title={label} onClick={() => setOpen((v) => !v)}>
+          <IconKey size={17} stroke={2} />
+          {hasKey ? <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-[#00A870] ring-2 ring-white/80" aria-hidden /> : null}
+        </DockItem>
+      ) : (
+        <button type="button" className="pill pill-ghost" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+          {hasKey ? <span className="size-2 rounded-full bg-[#00A870]" aria-hidden /> : <IconKey size={16} stroke={2} />}
+          <span>{hasKey ? "Your key" : "Use your key"}</span>
+        </button>
+      )}
       <AnimatePresence>
         {open ? (
           <>
@@ -76,14 +103,14 @@ export function KeyControl({ className, align = "right" }: { className?: string;
             <motion.div
               role="dialog"
               aria-label="Your Together API key"
-              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              initial={{ opacity: 0, y: inDock ? -8 : 8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.97, transition: { duration: 0.12 } }}
+              exit={{ opacity: 0, y: inDock ? -6 : 6, scale: 0.97, transition: { duration: 0.12 } }}
               transition={{ type: "spring", stiffness: 520, damping: 34 }}
-              style={{ transformOrigin: align === "right" ? "top right" : "top left" }}
+              style={{ transformOrigin: inDock ? "top right" : "bottom left" }}
               className={cn(
-                "sticker absolute top-full z-50 mt-2 w-[19rem] p-4 shadow-[var(--float)]",
-                align === "right" ? "right-0" : "left-0",
+                "sticker absolute z-50 w-[19rem] max-w-[calc(100vw-2rem)] p-4 shadow-[var(--float)]",
+                inDock ? "top-full right-0 mt-2" : "bottom-full left-0 mb-2",
               )}
             >
               <p className="tx-name">Race on your own key</p>

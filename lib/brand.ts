@@ -18,4 +18,4 @@ export const BRAND = {
 } as const;
 
 /** The model list and prices are a dated claim. Printed in the footer. */
-export const LAST_UPDATED = "2026-10-08";
+export const LAST_UPDATED = "2026-10-09";

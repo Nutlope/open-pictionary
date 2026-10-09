@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { IconArrowBackUp, IconDice5, IconFlag, IconFlameFilled, IconHeartFilled, IconRefresh, IconTrash, IconTrophy } from "@tabler/icons-react";
+import { IconArrowBackUp, IconDice5, IconFlag, IconFlameFilled, IconHeartFilled, IconKey, IconRefresh, IconTrash, IconTrophy } from "@tabler/icons-react";
 import { RACER_BY_KEY, type RacerKey } from "@/lib/racers";
 import { LAST_UPDATED } from "@/lib/brand";
 import { untilNext } from "@/lib/daily";
@@ -17,12 +17,12 @@ import { Creature } from "./Creature";
 import { Clock } from "./Clock";
 import { Burst } from "./Burst";
 import type { Tab } from "./Board";
-import { KeyControl, useTogetherKey } from "./KeyControl";
+import { KeyControl, openKeyForm, useTogetherKey } from "./KeyControl";
 import { onSession, readSession } from "./session";
 import type { ShareTarget } from "./ShareSheet";
 import type { CardTarget } from "./ModelCard";
 import { Table } from "./Table";
-import { BoardButton, DailyPill, SoundToggle } from "./Nav";
+import { BoardButton, DailyPill, Dock, SoundToggle } from "./Nav";
 import { Lineup, Note, ResultBar, Stamp } from "./Overlays";
 import { FieldHead, FieldList, Ticker, WrongCard } from "./Field";
 import { Level, StreakChip, Word } from "./Word";
@@ -116,6 +116,9 @@ function laneLog(lanes: Lane[]): ReplayGuess[] {
     .flatMap((l) => l.guesses.filter((g) => g.verdict !== "pending").map((g) => ({ k: l.key, g: g.text, v: g.verdict as ReplayGuess["v"], t: Math.round(g.at) })))
     .sort((a, b) => a.t - b.t);
 }
+
+/** What a share shows, in a few characters: changes when a model lands a guess. */
+const shareSig = (lanes: Lane[]) => lanes.map((l) => `${l.guesses.filter((g) => g.verdict !== "pending").length}${l.solvedAt != null ? "!" : ""}`).join(",");
 
 function endOf(strokes: number[][], log: ReplayGuess[], winMs: number | null) {
   const lastInk = Math.max(0, ...strokes.map((s) => s[s.length - 1] ?? 0));
@@ -309,6 +312,7 @@ export function Game({
   /* ---------------- share ---------------- */
   const [shareTarget, setShareTarget] = useState<ShareTarget | null>(null);
   const links = useRef(new Map<string, Promise<{ url: string; image: string } | { error: string }>>());
+  const sharedSig = useRef("");
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 2600);
@@ -335,8 +339,10 @@ export function Game({
       site: location.host,
     };
     const streak = isDaily && me ? liveDailyStreak(me, d) : undefined;
+    sharedSig.current = shareSig(race.lanes);
     const link = () => {
-      const key = isDaily ? `daily:${d}` : deal.token;
+      // Keyed by the log too: a model answering late refreshes the replay behind the link.
+      const key = isDaily ? `daily:${d}` : `${deal.token}:${src.log.length}`;
       let p = links.current.get(key);
       if (!p) {
         p = isDaily
@@ -362,6 +368,13 @@ export function Game({
       spoiler: isDaily,
     });
   }, [deal, done, race.startedAt, race.lanes, outcome, winner, winMs, isDaily, d, me, apiKey]);
+
+  // A model can still land its answer after the sheet opens; what gets shared catches up.
+  useEffect(() => {
+    if (!shareTarget || done || shareSig(race.lanes) === sharedSig.current) return;
+    const t = setTimeout(share, 600);
+    return () => clearTimeout(t);
+  }, [race.lanes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ---------------- keys ---------------- */
   const sheetOpen = anyOpen || !!shareTarget;
@@ -469,12 +482,12 @@ export function Game({
       <style>{`body{--room:${firstRoom.current}}`}</style>
       <Table
         nav={
-          <>
+          <Dock>
             <DailyPill mode={mode} d={d} played={!!me?.daily.days[d]} />
             <BoardButton onClick={() => setBoardOpen(isDaily ? "today" : "models")} />
-            <SoundToggle className="max-md:hidden" />
-            <KeyControl className="hidden md:block" />
-          </>
+            <SoundToggle inDock className="max-md:hidden" />
+            <KeyControl inDock className="hidden md:block" />
+          </Dock>
         }
         word={
           <div className="flex items-end justify-between gap-4">
@@ -606,7 +619,12 @@ export function Game({
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span>{race.error ?? "Demo guesses: no Together key is set, so these are canned, not live models. Add a key to race for real."}</span>
-                    {race.error && phase === "loading" ? (
+                    {race.error && /together key/i.test(race.error) ? (
+                      <button type="button" onClick={openKeyForm} className="pill h-9 shrink-0 bg-white">
+                        <IconKey size={16} stroke={2} />
+                        Add key
+                      </button>
+                    ) : race.error && phase === "loading" ? (
                       <button type="button" onClick={race.retry} className="pill h-9 shrink-0 bg-white">
                         <IconRefresh size={16} stroke={2} />
                         Retry
@@ -625,7 +643,7 @@ export function Game({
         footer={
           <div className="flex items-center gap-2 md:hidden">
             <SoundToggle />
-            <KeyControl align="left" />
+            <KeyControl />
           </div>
         }
       >

@@ -15,11 +15,11 @@ export const contentType = "image/png";
 
 const GUESSES: Record<RacerKey, { text: string; right?: boolean }> = {
   "kimi-k3": { text: "cat", right: true },
-  "qwen3-7-plus": { text: "fox" },
+  "qwen3-8-flash": { text: "fox" },
   "glm-5-3-flash": { text: "owl" },
   "minimax-m3": { text: "bunny" },
   "deepseek-v4-1-flash": { text: "mouse" },
-  "qwen3-5-9b": { text: "tiger" },
+  "muse-glimmer": { text: "tiger" },
 };
 
 export default async function Image() {

@@ -1,7 +1,7 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { deflateRawSync, inflateRawSync } from "node:zlib";
-import { RACERS, isRacerKey } from "@/lib/racers";
+import { RACERS, isRacerKey, seatOf } from "@/lib/racers";
 import { thinStrokes } from "@/lib/doodle";
 import type { Verdict } from "@/lib/judge";
 import type { Replay, ReplayGuess } from "@/lib/replay";
@@ -40,8 +40,8 @@ export function cleanLog(raw: unknown): ReplayGuess[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .slice(0, 80)
-    .filter((e): e is ReplayGuess => !!e && isRacerKey(e.k) && typeof e.g === "string" && ["correct", "close", "wrong"].includes(e.v))
-    .map((e) => ({ k: e.k, g: e.g.slice(0, 40), v: e.v, t: Math.max(0, Math.min(120_000, Math.round(Number(e.t) || 0))) }));
+    .filter((e): e is ReplayGuess => !!e && seatOf(e.k) != null && typeof e.g === "string" && ["correct", "close", "wrong"].includes(e.v))
+    .map((e) => ({ k: seatOf(e.k)!, g: e.g.slice(0, 40), v: e.v, t: Math.max(0, Math.min(120_000, Math.round(Number(e.t) || 0))) }));
 }
 
 /** The round's judged guesses: the server's own log, or the client's when the server has none. */
@@ -78,24 +78,25 @@ export async function createShare(
   const existing = store.remote ? await store.getJSON<string>(`r:${round.id}:share`) : null;
   if (existing) {
     const doc = await store.getJSON<Replay>(`share:${existing}`);
-    if (doc) return doc;
+    if (doc) {
+      // A model that answered after the first share still joins the replay.
+      const log = await roundLog(round.id, clientLog);
+      if (log.length > doc.log.length) {
+        Object.assign(doc, settle(doc.strokes, log));
+        await store.setJSON(`share:${doc.id}`, doc, SHARE_TTL);
+      }
+      return doc;
+    }
   }
   const strokes = cleanStrokes(rawStrokes);
   if (!strokes || strokes.length === 0) return { error: "Nothing to share yet." };
 
-  const log = await roundLog(round.id, clientLog);
-
-  const win = log.find((e) => e.v === "correct") ?? null;
-  const lastInk = Math.max(0, ...strokes.map((s) => s[s.length - 1] ?? 0));
   const doc: Replay = {
     v: 1,
     id: "",
     word: round.word,
     strokes,
-    log,
-    winner: win?.k ?? null,
-    winMs: win?.t ?? null,
-    endMs: Math.max(win?.t ?? 0, lastInk, log.at(-1)?.t ?? 0) + 400,
+    ...settle(strokes, await roundLog(round.id, clientLog)),
     demo,
     at: Date.now(),
   };
@@ -108,6 +109,18 @@ export async function createShare(
   await store.setJSON(`share:${doc.id}`, doc, SHARE_TTL);
   await store.setJSON(`r:${round.id}:share`, doc.id, LOG_TTL);
   return doc;
+}
+
+/** What a log says about a round: who won, when, and when the replay can stop. */
+function settle(strokes: number[][], log: ReplayGuess[]) {
+  const win = log.find((e) => e.v === "correct") ?? null;
+  const lastInk = Math.max(0, ...strokes.map((s) => s[s.length - 1] ?? 0));
+  return {
+    log,
+    winner: win?.k ?? null,
+    winMs: win?.t ?? null,
+    endMs: Math.max(win?.t ?? 0, lastInk, log.at(-1)?.t ?? 0) + 400,
+  };
 }
 
 export async function getShare(id: string): Promise<Replay | null> {
@@ -172,20 +185,7 @@ function decodeInline(id: string): Replay | null {
     const log: ReplayGuess[] = p.l
       .filter(([k, , v]) => RACERS[k] && VERDICTS[v])
       .map(([k, g, v, t]) => ({ k: RACERS[k].key, g, v: VERDICTS[v], t: t * 10 }));
-    const win = log.find((e) => e.v === "correct") ?? null;
-    const lastInk = Math.max(0, ...strokes.map((s) => s[s.length - 1] ?? 0));
-    return {
-      v: 1,
-      id,
-      word: p.w,
-      strokes,
-      log,
-      winner: win?.k ?? null,
-      winMs: win?.t ?? null,
-      endMs: Math.max(win?.t ?? 0, lastInk, log.at(-1)?.t ?? 0) + 400,
-      demo: p.d === 1,
-      at: p.a * 1000,
-    };
+    return { v: 1, id, word: p.w, strokes, ...settle(strokes, log), demo: p.d === 1, at: p.a * 1000 };
   } catch {
     return null;
   }

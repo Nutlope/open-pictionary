@@ -197,6 +197,43 @@
     padding: 0;
     justify-content: center;
   }
+
+  /* The header's controls: one frosted capsule tinted by the room, not a row of white buttons. */
+  .dock {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.3);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.32);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
+  }
+  .dock-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 2.25rem;
+    padding: 0 0.85rem;
+    border-radius: 999px;
+    color: var(--ink);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    transition: transform 0.25s var(--ease-spring);
+  }
+  .dock-item:active {
+    transform: scale(0.93);
+    transition-duration: 0.08s;
+  }
+  .dock-item-icon {
+    width: 2.25rem;
+    padding: 0;
+    justify-content: center;
+  }
 }
 
 /* The paper column is sized by viewport height so the table fits one screen. */

@@ -133,11 +133,11 @@ export async function POST(req: Request) {
    ------------------------------------------------------------------ */
 const DEMO_PACE: Record<RacerKey, number> = {
   "kimi-k3": 900,
-  "qwen3-7-plus": 1300,
+  "qwen3-8-flash": 1100,
   "glm-5-3-flash": 700,
   "minimax-m3": 1000,
   "deepseek-v4-1-flash": 700,
-  "qwen3-5-9b": 800,
+  "muse-glimmer": 1300,
 };
 
 async function demoGuess(

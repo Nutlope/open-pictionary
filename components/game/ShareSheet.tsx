@@ -83,46 +83,67 @@ export function ShareSheet({ target, onClose }: { target: ShareTarget | null; on
     setMobile(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) && "share" in navigator);
   }, []);
 
+  // Opening: a clean slate, focus on close, and Escape. Not repeated when the
+  // round it shows updates underneath (a model answering late).
+  const isOpen = !!target;
   useEffect(() => {
-    if (!target) return;
+    if (!isOpen) return;
     setLink(null);
     setLinkError(null);
     setCopied(null);
-    wantVideo.current = false;
+    const t = setTimeout(() => closeRef.current?.focus(), 80);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("keydown", esc);
+    };
+  }, [isOpen, onClose]);
+
+  const getLink = target?.link;
+  useEffect(() => {
+    if (!getLink) return;
     let live = true;
-    target.link().then((r) => {
+    getLink().then((r) => {
       if (!live) return;
       if ("error" in r) setLinkError(r.error);
-      else setLink(r);
+      else {
+        setLink(r);
+        setLinkError(null);
+      }
     });
+    return () => {
+      live = false;
+    };
+  }, [getLink]);
 
-    // The video is made in the background as soon as the sheet opens, so it
-    // is usually ready by the time anyone reaches for it.
+  // The video is made in the background as soon as the sheet opens, so it
+  // is usually ready by the time anyone reaches for it.
+  const clip = target?.clip;
+  const fileName = target?.file;
+  useEffect(() => {
+    if (!clip) return;
+    let live = true;
     const abort = new AbortController();
+    wantVideo.current = false;
     setVideo({ state: "off", progress: 0, file: null });
     videoSupport().then((ok) => {
       if (!ok || !live) return;
       setVideo({ state: "making", progress: 0, file: null });
-      encodeClip(target.clip, pageFont(), (p) => live && setVideo((v) => ({ ...v, progress: p })), abort.signal)
+      encodeClip(clip, pageFont(), (p) => live && setVideo((v) => ({ ...v, progress: p })), abort.signal)
         .then((blob) => {
           if (!live) return;
-          const file = new File([blob], `${target.file}.mp4`, { type: "video/mp4" });
+          const file = new File([blob], `${fileName}.mp4`, { type: "video/mp4" });
           setCanShareFiles(!!navigator.canShare?.({ files: [file] }));
           setVideo({ state: "ready", progress: 1, file });
         })
         .catch(() => live && setVideo({ state: "failed", progress: 0, file: null }));
     });
-
-    const t = setTimeout(() => closeRef.current?.focus(), 80);
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", esc);
     return () => {
       live = false;
       abort.abort();
-      clearTimeout(t);
-      window.removeEventListener("keydown", esc);
     };
-  }, [target, onClose]);
+  }, [clip, fileName]);
 
   const text = target ? target.text(link?.url ?? null) : "";
 

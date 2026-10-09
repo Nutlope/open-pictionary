@@ -1,4 +1,4 @@
-import { RACERS, type RacerKey } from "@/lib/racers";
+import { RACERS, retiredFor, type RacerKey } from "@/lib/racers";
 
 /**
  * This browser's own scoreboard. localStorage, so it is a convenience, not a
@@ -20,7 +20,8 @@ export function readSession(): Session {
     const s = JSON.parse(localStorage.getItem(KEY) ?? "null") as Session | null;
     if (!s) return empty();
     const base = empty();
-    for (const r of RACERS) base.rows[r.key] = { ...base.rows[r.key], ...(s.rows?.[r.key] ?? {}) };
+    const rows = (s.rows ?? {}) as Record<string, SessionRow>;
+    for (const r of RACERS) base.rows[r.key] = { ...base.rows[r.key], ...(rows[r.key] ?? rows[retiredFor(r.key) ?? ""] ?? {}) };
     base.rounds = s.rounds ?? 0;
     return base;
   } catch {

@@ -24,9 +24,9 @@ export const VOICES: Record<RacerKey, Voice> = {
       doze: ["zzz"],
     },
   },
-  "qwen3-7-plus": {
+  "qwen3-8-flash": {
     vibe: "the professor",
-    bio: "Qwen's big all-rounder. Thinks before it speaks, then doesn't.",
+    bio: "Qwen's newest fast model. Rarely in doubt.",
     lines: {
       win: ["indeed.", "naturally", "elementary"],
       also: ["agreed", "concur"],
@@ -80,17 +80,17 @@ export const VOICES: Record<RacerKey, Voice> = {
       doze: ["zzz"],
     },
   },
-  "qwen3-5-9b": {
-    vibe: "the little one",
-    bio: "The smallest in the field at 9B. Tries very hard.",
+  "muse-glimmer": {
+    vibe: "the dreamer",
+    bio: "Meta's Muse. Always daydreams a little before it answers.",
     lines: {
-      win: ["i did it!", "me!!", "yay!"],
-      also: ["me too!", "i knew!"],
-      wrong: ["oh no", "sorry"],
-      close: ["eek, close", "almost!"],
-      lose: ["aww", "oh well"],
-      stumped: ["a dog?"],
-      picked: ["me?!", "really?!"],
+      win: ["inspired", "i saw it", "magic"],
+      also: ["felt it", "same vibe"],
+      wrong: ["or not", "hmm…"],
+      close: ["warm…", "so near"],
+      lose: ["sigh", "next time"],
+      stumped: ["pure art", "a mood"],
+      picked: ["aw, me?", "inspiring"],
       doze: ["zzz"],
     },
   },

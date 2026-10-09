@@ -134,28 +134,39 @@ function DailyTab({ d, me, onClose }: { d: number; me: Me | null; onClose: () =>
   const played = !!mine;
   const meInTop = mine?.entry ? data?.top.some((e) => e.id === mine.entry) : false;
 
+  const empty = data != null && data.top.length === 0;
+  const drawIt = onDaily ? (
+    <button type="button" onClick={onClose} className="pill pill-ink h-9 shrink-0">
+      Draw it
+    </button>
+  ) : (
+    <Link href="/daily" className="pill pill-ink h-9 shrink-0">
+      Draw it
+    </Link>
+  );
+
   return (
     <div className="px-3 py-2">
-      {!played ? (
+      {!played && data && !empty ? (
         <div className="mx-1 mb-2 flex items-center gap-3 rounded-2xl bg-card-2 py-3 pr-3 pl-4">
           <IconLock size={18} stroke={2} className="shrink-0 text-ink-3" />
           <p className="tx-small flex-1 text-ink-2">Draw today&apos;s word first. The doodles below give it away.</p>
-          {onDaily ? (
-            <button type="button" onClick={onClose} className="pill pill-ink h-9 shrink-0">
-              Draw it
-            </button>
-          ) : (
-            <Link href="/daily" className="pill pill-ink h-9 shrink-0">
-              Draw it
-            </Link>
-          )}
+          {drawIt}
         </div>
       ) : null}
-      {data && data.top.length === 0 ? (
-        <p className="tx-small mx-1 rounded-2xl bg-card-2 px-4 py-3 text-ink-2">
-          {data.players ? "Nobody's doodle got guessed yet today. Yours could top the board." : "Nobody has drawn today's word yet. Be the first on the board."}
-        </p>
+      {empty ? (
+        <div className="mx-1 flex items-center gap-3 rounded-2xl bg-card-2 py-3 pr-3 pl-4">
+          <p className="tx-small flex-1 text-ink-2">
+            {played
+              ? "No doodle has been guessed yet today."
+              : data.players
+                ? "Nobody's doodle got guessed yet today. Yours could top the board."
+                : "Nobody has drawn today's word yet. Be the first on the board."}
+          </p>
+          {!played ? drawIt : null}
+        </div>
       ) : null}
+      {!data && !failed ? <p className="tx-small mx-1 px-3 py-3 text-ink-3">Loading…</p> : null}
       {failed && !data ? <p className="tx-small mx-1 px-3 py-3 text-ink-2">The daily board is unavailable right now.</p> : null}
       <ol>
         {data?.top.map((e, i) => {
@@ -236,7 +247,7 @@ function YouTab({ me, d, onOpen }: { me: Me | null; d: number; onOpen: (k: Racer
         <Stat value={me.best ? fmtSec(me.best.ms) : "-"} label={me.best ? `best · ${me.best.word}` : "best time"} />
         <Stat value={String(me.streak)} label="in a row now" icon={me.streak > 1 ? <IconFlameFilled size={18} className="text-[#F2442E]" /> : null} />
         <Stat value={String(me.bestStreak)} label="longest run" />
-        <Stat value={String(me.rounds)} label="rounds" />
+        <Stat value={String(me.rounds)} label={me.rounds === 1 ? "round" : "rounds"} />
         <Stat value={me.rounds ? `${pct(me.solved, me.rounds)}%` : "-"} label="got guessed" />
         <Stat value={me.picks.made ? `${me.picks.hits}/${me.picks.made}` : "-"} label="picks called" />
       </div>
@@ -260,6 +271,53 @@ function YouTab({ me, d, onOpen }: { me: Me | null; d: number; onOpen: (k: Racer
           <ModelRows rows={session.rows} onOpen={onOpen} />
         </div>
       )}
+    </div>
+  );
+}
+
+/** Wiping a streak takes two taps: the first one asks. */
+function ResetStats() {
+  const [sure, setSure] = useState(false);
+  useEffect(() => {
+    if (!sure) return;
+    const t = setTimeout(() => setSure(false), 4000);
+    return () => clearTimeout(t);
+  }, [sure]);
+  return (
+    <div className="flex h-6 items-center gap-3">
+      <AnimatePresence mode="popLayout" initial={false}>
+        {sure ? (
+          <motion.span key="sure" className="flex items-center gap-3" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
+            <span className="tx-small text-ink-2">Clear your streaks, bests and picks?</span>
+            <button
+              type="button"
+              onClick={() => {
+                resetSession();
+                resetStats();
+                setSure(false);
+              }}
+              className="tx-small font-semibold text-bad underline decoration-bad/30 underline-offset-4 hover:decoration-bad"
+            >
+              Clear
+            </button>
+            <button type="button" onClick={() => setSure(false)} className="tx-small font-semibold text-ink-2 hover:text-ink">
+              Keep
+            </button>
+          </motion.span>
+        ) : (
+          <motion.button
+            key="ask"
+            type="button"
+            onClick={() => setSure(true)}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="tx-small font-semibold underline decoration-ink-4 underline-offset-4 hover:decoration-ink"
+          >
+            Reset your stats
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -411,15 +469,7 @@ export function Board({
 
             <footer className="border-t border-line px-6 py-4">
               {tab === "you" ? (
-                <button
-                  onClick={() => {
-                    resetSession();
-                    resetStats();
-                  }}
-                  className="tx-small font-semibold underline decoration-ink-4 underline-offset-4 hover:decoration-ink"
-                >
-                  Reset your stats
-                </button>
+                <ResetStats />
               ) : tab === "today" ? (
                 <div className="flex items-center justify-between gap-3">
                   <p className="tx-small text-ink-3">

@@ -2,15 +2,18 @@
  * The racers. One open vision model per lab, so the race is between genuinely
  * different model families rather than six sizes of the same one.
  *
- * Verified live on 2026-10-08 against GET /v1/models plus a real image call per
- * model (the lineup was revised the same day). Notes from that run, so nobody re-learns them:
+ * Verified live on 2026-10-09 against GET /v1/models plus a real image call per
+ * model. Notes from those runs, so nobody re-learns them:
  * - Qwen3.8 2.4T is the docs' vision pick but rejects image input on
- *   serverless ("Multimodal not supported"). Qwen3.7 Plus takes images.
+ *   serverless ("Multimodal not supported"). Qwen3.8 Flash takes images.
  * - Qwen3.6/3.7 Plus and Qwen3.8 Flash only accept stream: true.
  * - Thinking switches differ per lab, and a wrong one is silent: the model
  *   reasons for hundreds of tokens on a hard sketch and runs out of budget
  *   before it answers. Each entry carries the switch that took that model to
  *   a no-reasoning answer, tested on an ambiguous sketch, not an easy one.
+ * - Muse Glimmer has no off switch. It always reasons a little first (about
+ *   50 to 90 tokens at low effort), so its cap leaves room for that.
+ * - Qwen3.8 Flash rejects reasoning_effort alongside enable_thinking: false.
  * - gpt-oss-120b accepts image input but cannot see it (it answers "unknown"
  *   for every sketch), so it stays out. Llama 4, Gemma 4 and the Mistral
  *   vision models are not on serverless as of this check.
@@ -23,11 +26,11 @@
  */
 export type RacerKey =
   | "kimi-k3"
-  | "qwen3-7-plus"
+  | "qwen3-8-flash"
   | "glm-5-3-flash"
   | "minimax-m3"
   | "deepseek-v4-1-flash"
-  | "qwen3-5-9b";
+  | "muse-glimmer";
 
 export type Shape = "circle" | "square" | "triangle" | "pill" | "drop" | "flower";
 
@@ -69,17 +72,17 @@ export const RACERS: Racer[] = [
     maxTokens: 48,
   },
   {
-    key: "qwen3-7-plus",
-    id: "Qwen/Qwen3.7-Plus",
-    label: "Qwen3.7 Plus",
-    short: "Qwen3.7",
+    key: "qwen3-8-flash",
+    id: "Qwen/Qwen3.8-Flash",
+    label: "Qwen3.8 Flash",
+    short: "Qwen3.8",
     color: "#6B4EFF",
     heart: "💜",
     shape: "square",
     room: "#BBA8FF",
     lab: "Qwen",
-    inPerM: 0.32,
-    outPerM: 1.28,
+    inPerM: 0.15,
+    outPerM: 0.47,
     params: { chat_template_kwargs: { enable_thinking: false } },
     maxTokens: 40,
   },
@@ -133,19 +136,19 @@ export const RACERS: Racer[] = [
     maxTokens: 24,
   },
   {
-    key: "qwen3-5-9b",
-    id: "Qwen/Qwen3.5-9B",
-    label: "Qwen3.5 9B",
-    short: "Qwen 9B",
+    key: "muse-glimmer",
+    id: "meta-models/Muse-Glimmer-30B",
+    label: "Muse Glimmer",
+    short: "Muse",
     color: "#FFA800",
     heart: "💛",
     shape: "flower",
     room: "#FFD84A",
-    lab: "Qwen",
-    inPerM: 0.17,
-    outPerM: 0.25,
-    params: { chat_template_kwargs: { enable_thinking: false } },
-    maxTokens: 24,
+    lab: "Meta",
+    inPerM: 0.35,
+    outPerM: 1.5,
+    params: { reasoning_effort: "low" },
+    maxTokens: 240,
   },
 ];
 
@@ -153,6 +156,24 @@ export const RACER_BY_KEY = Object.fromEntries(RACERS.map((r) => [r.key, r])) as
 
 export function isRacerKey(v: unknown): v is RacerKey {
   return typeof v === "string" && v in RACER_BY_KEY;
+}
+
+/**
+ * Seats whose model was swapped out. A record saved before the swap (a stat
+ * in this browser, a replay link) keeps its creature: the seat carries on
+ * under the new model.
+ */
+const RETIRED: Record<string, RacerKey> = { "qwen3-7-plus": "qwen3-8-flash", "qwen3-5-9b": "muse-glimmer" };
+
+/** A racer key from anything saved earlier, retired seats included. */
+export function seatOf(v: unknown): RacerKey | null {
+  if (isRacerKey(v)) return v;
+  return typeof v === "string" ? (RETIRED[v] ?? null) : null;
+}
+
+/** The retired key that used to sit in this seat, if any. */
+export function retiredFor(k: RacerKey): string | undefined {
+  return Object.keys(RETIRED).find((old) => RETIRED[old] === k);
 }
 
 export function costFor(r: Racer, promptTokens: number, completionTokens: number) {

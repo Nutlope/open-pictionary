@@ -171,7 +171,7 @@ export function ModelCard({ target, onClose }: { target: CardTarget; onClose: ()
                 ) : null}
                 <Row label="With you">
                   {mine && mine.rounds
-                    ? `won ${mine.wins} of your ${mine.rounds} rounds${backed ? `, came through ${backed[1]} of ${backed[0]} times you backed it` : ""}`
+                    ? `won ${mine.wins} of your ${mine.rounds} ${mine.rounds === 1 ? "round" : "rounds"}${backed ? `, came through ${backed[1]} of ${backed[0]} ${backed[0] === 1 ? "time" : "times"} you backed it` : ""}`
                     : "no rounds together yet"}
                 </Row>
               </div>

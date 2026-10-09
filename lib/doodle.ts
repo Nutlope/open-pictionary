@@ -4,14 +4,16 @@ import { PEN, SPACE } from "@/lib/sketch";
 /**
  * A doodle as filled outline paths plus a viewBox cropped to the ink, for SVG
  * thumbnails and the Satori cards. Strokes are flat arrays: [x, y, t, ...]
- * (stride 3) or [x, y, ...] (stride 2).
+ * (stride 3) or [x, y, ...] (stride 2). `weight` sets the pen as a share of
+ * the cropped box, so a tiny thumbnail keeps a line you can see; without it
+ * the pen is the one used on the paper.
  */
-export function outlinePaths(strokes: number[][], stride: 2 | 3 = 3): { paths: string[]; viewBox: string } {
+export function outlinePaths(strokes: number[][], stride: 2 | 3 = 3, weight?: number): { paths: string[]; viewBox: string } {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
-  const paths = strokes.map((flat) => {
+  const lines = strokes.map((flat) => {
     const pts: number[][] = [];
     for (let i = 0; i + 1 < flat.length; i += stride) {
       pts.push([flat[i], flat[i + 1], 0.5]);
@@ -20,10 +22,17 @@ export function outlinePaths(strokes: number[][], stride: 2 | 3 = 3): { paths: s
       minY = Math.min(minY, flat[i + 1]);
       maxY = Math.max(maxY, flat[i + 1]);
     }
-    const o = getStroke(pts, { size: PEN, thinning: 0.55, smoothing: 0.55, streamline: 0.45, simulatePressure: true, last: true });
+    return pts;
+  });
+  if (!Number.isFinite(minX)) return { paths: [], viewBox: `0 0 ${SPACE} ${SPACE}` };
+  const side = Math.max(maxX - minX, maxY - minY, 300) * 1.22;
+  const size = weight ? side * weight : PEN;
+  const paths = lines.map((pts) => {
+    const o = getStroke(pts, { size, thinning: 0.55, smoothing: 0.55, streamline: 0.45, simulatePressure: true, last: true });
     if (o.length < 2) {
       const [x, y] = pts[0] ?? [0, 0];
-      return `M${x - 4} ${y} a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0`;
+      const r = size / 2;
+      return `M${x - r} ${y} a${r} ${r} 0 1 0 ${2 * r} 0 a${r} ${r} 0 1 0 ${-2 * r} 0`;
     }
     let d = `M${o[0][0].toFixed(1)} ${o[0][1].toFixed(1)}`;
     for (let i = 1; i < o.length; i++) {
@@ -33,8 +42,6 @@ export function outlinePaths(strokes: number[][], stride: 2 | 3 = 3): { paths: s
     }
     return d + " Z";
   });
-  if (!Number.isFinite(minX)) return { paths, viewBox: `0 0 ${SPACE} ${SPACE}` };
-  const side = Math.max(maxX - minX, maxY - minY, 300) * 1.22;
   const cx = (minX + maxX) / 2;
   const cy = (minY + maxY) / 2;
   return { paths, viewBox: `${(cx - side / 2).toFixed(0)} ${(cy - side / 2).toFixed(0)} ${side.toFixed(0)} ${side.toFixed(0)}` };
