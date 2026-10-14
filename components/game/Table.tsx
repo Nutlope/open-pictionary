@@ -1,4 +1,4 @@
-import { DerbyWordmark, TogetherCredit } from "@/components/Brand";
+import { DerbyWordmark, Makers, TogetherCredit } from "@/components/Brand";
 
 /**
  * The table every screen sits at: a header and footer framed wide, and a
@@ -18,7 +18,6 @@ export function Table({
   fieldHead,
   field,
   fieldFoot,
-  note,
   footer,
   children,
 }: {
@@ -29,9 +28,7 @@ export function Table({
   fieldHead?: React.ReactNode;
   field: React.ReactNode;
   fieldFoot?: React.ReactNode;
-  /** Beside the credit, bottom left. */
-  note?: React.ReactNode;
-  /** Bottom right. */
+  /** Beside the makers, bottom left. */
   footer?: React.ReactNode;
   children?: React.ReactNode;
 }) {
@@ -52,11 +49,11 @@ export function Table({
       </main>
 
       <footer className="mx-auto flex w-full max-w-[1680px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 pb-5 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <TogetherCredit />
-          {note}
+        <div className="flex items-center gap-2">
+          <Makers />
+          {footer}
         </div>
-        {footer}
+        <TogetherCredit />
       </footer>
       {children}
     </div>

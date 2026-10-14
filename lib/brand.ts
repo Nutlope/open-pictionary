@@ -7,6 +7,13 @@ export const BRAND = {
   tagline: "You draw. Six open models race to guess it.",
   company: "Together AI",
 
+  repo: "Luffixos/doodle-derby",
+  repoUrl: "https://github.com/Luffixos/doodle-derby",
+  makers: [
+    { name: "Youssef", url: "https://github.com/Luffixos" },
+    { name: "Hassan", url: "https://github.com/Nutlope" },
+  ],
+
   togetherUrl: "https://www.together.ai",
   consoleUrl: "https://api.together.ai",
   signupUrl: "https://api.together.ai/signin",
@@ -16,6 +23,3 @@ export const BRAND = {
   docsUrl: "https://docs.together.ai",
   contactUrl: "https://www.together.ai/contact-sales",
 } as const;
-
-/** The model list and prices are a dated claim. Printed in the footer. */
-export const LAST_UPDATED = "2026-10-09";

@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { IconArrowBackUp, IconDice5, IconFlag, IconFlameFilled, IconHeartFilled, IconKey, IconRefresh, IconTrash, IconTrophy } from "@tabler/icons-react";
 import { RACER_BY_KEY, type RacerKey } from "@/lib/racers";
-import { LAST_UPDATED } from "@/lib/brand";
 import { untilNext } from "@/lib/daily";
 import { packStrokes } from "@/lib/sketch";
 import { thinStrokes } from "@/lib/doodle";
@@ -22,7 +21,7 @@ import { onSession, readSession } from "./session";
 import type { ShareTarget } from "./ShareSheet";
 import type { CardTarget } from "./ModelCard";
 import { Table } from "./Table";
-import { BoardButton, DailyPill, Dock, SoundToggle } from "./Nav";
+import { BoardButton, DailyPill, Dock, SoundToggle, StarButton } from "./Nav";
 import { Lineup, Note, ResultBar, Stamp } from "./Overlays";
 import { FieldHead, FieldList, Ticker, WrongCard } from "./Field";
 import { Level, StreakChip, Word } from "./Word";
@@ -489,12 +488,15 @@ export function Game({
       <style>{`body{--room:${firstRoom.current}}`}</style>
       <Table
         nav={
-          <Dock>
-            <DailyPill mode={mode} d={d} played={!!me?.daily.days[d]} />
-            <BoardButton onClick={() => setBoardOpen(isDaily ? "today" : "models")} />
-            <SoundToggle inDock className="max-md:hidden" />
-            <KeyControl inDock className="hidden md:block" />
-          </Dock>
+          <>
+            <Dock>
+              <DailyPill mode={mode} d={d} played={!!me?.daily.days[d]} />
+              <BoardButton onClick={() => setBoardOpen(isDaily ? "today" : "models")} />
+              <SoundToggle inDock className="max-md:hidden" />
+              <KeyControl inDock className="hidden md:block" />
+            </Dock>
+            <StarButton />
+          </>
         }
         word={
           <div className="flex items-end justify-between gap-4">
@@ -646,7 +648,6 @@ export function Game({
           </>
         }
         fieldFoot={<WrongCard wrong={live?.wrong ?? null} hidden={phase === "drawing"} onOpen={openCard} />}
-        note={<span className="tx-small text-ink-3">Model list and prices checked {LAST_UPDATED}</span>}
         footer={
           <div className="flex items-center gap-2 md:hidden">
             <SoundToggle />

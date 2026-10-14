@@ -67,3 +67,19 @@ export function TogetherCredit({ className = "" }: { className?: string }) {
     </a>
   );
 }
+
+export function Makers() {
+  return (
+    <p className="tx-small text-ink-2">
+      Made by{" "}
+      {BRAND.makers.map((m, i) => (
+        <span key={m.name}>
+          {i > 0 ? " and " : null}
+          <a href={m.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-ink underline decoration-ink/20 underline-offset-4 transition-colors hover:decoration-ink">
+            {m.name}
+          </a>
+        </span>
+      ))}
+    </p>
+  );
+}
