@@ -12,7 +12,7 @@ export async function GET() {
   after(() => refreshFunny(houseKey()).catch(() => {}));
   try {
     return NextResponse.json(await readPulse(), {
-      headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60" },
+      headers: { "Cache-Control": "no-store" },
     });
   } catch {
     return NextResponse.json({ error: "unavailable" }, { status: 503 });

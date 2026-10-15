@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const d = dailyNumber();
   const title = `Daily doodle #${d}`;
-  const description = "One word for everyone today. Draw it, and six AI models race to guess yours. Fastest doodles top the board.";
+  const description = "One word for everyone today. Draw it, and seven AI models race to guess yours. Fastest doodles top the board.";
   return {
     title: `${title} · doodle derby`,
     description,

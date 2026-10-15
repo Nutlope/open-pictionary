@@ -91,7 +91,7 @@ export function KeyControl({ className, inDock }: { className?: string; inDock?:
           {hasKey ? <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-[#00A870] ring-2 ring-white/80" aria-hidden /> : null}
         </DockItem>
       ) : (
-        <button type="button" className="pill pill-ghost" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <button type="button" className="pill pill-ghost whitespace-nowrap" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           {hasKey ? <span className="size-2 rounded-full bg-[#00A870]" aria-hidden /> : <IconKey size={16} stroke={2} />}
           <span>{hasKey ? "Your key" : "Use your key"}</span>
         </button>

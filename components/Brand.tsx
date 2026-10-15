@@ -3,7 +3,7 @@ import { GLYPH_PATH } from "@/lib/creatures";
 
 /**
  * The Doodle Derby mark: a scribble loop that runs out to a finish dot, with
- * the six creature colors as a striped flag at the end of the line.
+ * the creature colors as a striped flag at the end of the line.
  */
 export function DerbyGlyph({ className = "size-8" }: { className?: string }) {
   return (
@@ -70,7 +70,7 @@ export function TogetherCredit({ className = "" }: { className?: string }) {
 
 export function Makers() {
   return (
-    <p className="tx-small text-ink-2">
+    <p className="tx-small whitespace-nowrap text-ink-2">
       Made by{" "}
       {BRAND.makers.map((m, i) => (
         <span key={m.name}>

@@ -49,7 +49,7 @@ async function json<T>(url: string): Promise<T> {
 }
 
 export const pulse = shared(() => json<Pulse>("/api/pulse"), 20_000);
-export const board = shared(() => json<Board>("/api/board"), 30_000);
+export const board = shared(() => json<Board>("/api/board"), 4_000);
 
 /**
  * The shared value, starting from what the server rendered with. The stores
@@ -88,12 +88,16 @@ export function usePulse(initial?: Pulse | null): Pulse | null {
   return v;
 }
 
+/** The global board: fresh when opened, and kept live while it is on screen. */
 export function useBoard(active: boolean): { data: Board | null; failed: boolean } {
   const data = useShared(board);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     if (!active) return;
-    board.refresh().then((v) => setFailed(!v));
+    const load = (force: boolean) => board.refresh(force).then((v) => setFailed(!v));
+    load(true);
+    const id = setInterval(() => document.visibilityState === "visible" && load(true), 8_000);
+    return () => clearInterval(id);
   }, [active]);
   return { data, failed };
 }

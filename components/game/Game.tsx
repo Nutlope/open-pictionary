@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { IconArrowBackUp, IconDice5, IconFlag, IconFlameFilled, IconHeartFilled, IconKey, IconRefresh, IconTrash, IconTrophy } from "@tabler/icons-react";
+import { IconArrowBackUp, IconDice5, IconFlag, IconFlameFilled, IconKey, IconRefresh, IconTrash, IconTrophy } from "@tabler/icons-react";
 import { RACER_BY_KEY, type RacerKey } from "@/lib/racers";
 import { untilNext } from "@/lib/daily";
 import { packStrokes } from "@/lib/sketch";
@@ -149,7 +149,6 @@ export function Game({
   const [boardOpen, setBoardOpen] = useState<Tab | null>(null);
   const [card, setCard] = useState<CardTarget>(null);
   const [hasInk, setHasInk] = useState(false);
-  const [pick, setPick] = useState<RacerKey | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   useEffect(() => {
@@ -218,7 +217,6 @@ export function Game({
     room.current = roundRoom.current = next;
     setRoom(next);
     setFlood(null);
-    setPick(null);
     setOutcome(null);
   }, [deal?.token]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -287,7 +285,10 @@ export function Game({
   // The board is about to be the next thing people look at; have it ready.
   useEffect(() => {
     if (!race.final) return;
-    const t = setTimeout(() => boardStore.refresh(true), 2500);
+    const t = setTimeout(() => {
+      boardStore.refresh(true);
+      pulseStore.refresh(true);
+    }, 1500);
     return () => clearTimeout(t);
   }, [race.final]);
 
@@ -297,9 +298,9 @@ export function Game({
     if (!race.lanes.some((l) => l.guesses.length > 0)) return;
     settled.current = deal.token;
     const ms = winnerLane?.solvedAt ?? null;
-    const o = recordOutcome({ word: deal.word, ms, k: race.winner, pick });
+    const o = recordOutcome({ word: deal.word, ms, k: race.winner, pick: null });
     setOutcome(o);
-    if (o.newBest || o.called) sound.sparkle(race.winner ? 0.75 : 0.1);
+    if (o.newBest) sound.sparkle(race.winner ? 0.75 : 0.1);
     if (isDaily && pad.current && race.startedAt != null) {
       const strokes = packStrokes(pad.current.strokes(), race.startedAt);
       const log = laneLog(race.lanes);
@@ -427,15 +428,6 @@ export function Game({
       </Note>,
     );
   }
-  const called = done ? done.called : (outcome?.called ?? null);
-  const pickKey = done ? null : pick;
-  if (called) {
-    notes.push(
-      <Note icon={<IconHeartFilled size={13} style={{ color: pickKey ? RACER_BY_KEY[pickKey].color : "#F2338C" }} />} strong>
-        you called it
-      </Note>,
-    );
-  }
   if (!done && outcome) {
     if (outcome.streak >= 2) notes.push(<Note icon={<IconFlameFilled size={13} className="text-[#FF8A3D]" />}>{outcome.streak} in a row</Note>);
     else if (outcome.broke) notes.push(<Note>streak of {outcome.broke} ended</Note>);
@@ -446,7 +438,7 @@ export function Game({
   }
   if (!done) notes.push(<span className="tx-num">${race.cost.toFixed(3)}</span>);
 
-  const ribbon = done ? null : outcome?.newBest ? "new best" : outcome?.firstWin ? "first win" : outcome?.called ? "called it" : null;
+  const ribbon = done ? null : outcome?.newBest ? "new best" : outcome?.firstWin ? "first win" : null;
   const dailyStreak = me ? liveDailyStreak(me, d) : 0;
   const clockRight =
     done ? (
@@ -540,7 +532,7 @@ export function Game({
 
             <AnimatePresence>
               {phase === "ready" && !hasInk && !done && settledView ? (
-                <Lineup pick={pick} onPick={setPick} dozing={dozing} demo={demo} onDemoDone={endDemo} />
+                <Lineup dozing={dozing} demo={demo} onDemoDone={endDemo} />
               ) : null}
             </AnimatePresence>
 
@@ -644,7 +636,7 @@ export function Game({
               ) : null}
             </AnimatePresence>
             {/* A finished daily mounts fresh, so the field does not re-live the round out loud. */}
-            <FieldList key={done ? "done" : "live"} lanes={view} phase={phase} winner={winner} wins={wins} pick={done ? null : pick} dozing={dozing} onOpen={openCard} />
+            <FieldList key={done ? "done" : "live"} lanes={view} phase={phase} winner={winner} wins={wins} dozing={dozing} onOpen={openCard} />
           </>
         }
         fieldFoot={<WrongCard wrong={live?.wrong ?? null} hidden={phase === "drawing"} onOpen={openCard} />}

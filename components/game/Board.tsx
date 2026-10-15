@@ -249,7 +249,7 @@ function YouTab({ me, d, onOpen }: { me: Me | null; d: number; onOpen: (k: Racer
         <Stat value={String(me.bestStreak)} label="longest run" />
         <Stat value={String(me.rounds)} label={me.rounds === 1 ? "round" : "rounds"} />
         <Stat value={me.rounds ? `${pct(me.solved, me.rounds)}%` : "-"} label="got guessed" />
-        <Stat value={me.picks.made ? `${me.picks.hits}/${me.picks.made}` : "-"} label="picks called" />
+        <Stat value={String(Object.keys(me.daily.days).length)} label={Object.keys(me.daily.days).length === 1 ? "daily drawn" : "dailies drawn"} />
       </div>
       <p className="tx-small mx-1 mt-3 rounded-2xl bg-card-2 px-4 py-3 text-ink-2">
         {daily > 0 ? (
@@ -288,7 +288,7 @@ function ResetStats() {
       <AnimatePresence mode="popLayout" initial={false}>
         {sure ? (
           <motion.span key="sure" className="flex items-center gap-3" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-            <span className="tx-small text-ink-2">Clear your streaks, bests and picks?</span>
+            <span className="tx-small text-ink-2">Clear your streaks and bests?</span>
             <button
               type="button"
               onClick={() => {
@@ -337,7 +337,7 @@ export function Board({
   onOpenModel: (k: RacerKey, from: DOMRect) => void;
 }) {
   const [tab, setTab] = useState<Tab>("today");
-  const { data: global, failed } = useBoard(open === "models" || tab === "models");
+  const { data: global, failed } = useBoard(open === "models" || (!!open && tab === "models"));
   const me = useMe();
   const closeRef = useRef<HTMLButtonElement>(null);
   const wide = useWide();
@@ -360,10 +360,10 @@ export function Board({
     today: { title: `Daily doodle #${d}`, sub: "Everyone draws the same word. Fastest guessed doodles on top.", wash: "#FFD84A" },
     models: {
       title: "Who reads doodles best",
-      sub: "Six open models, ranked by how often they guess first. Tap one for its card.",
+      sub: "Seven open models, ranked by how often they guess first. Tap one for its card.",
       wash: leader && leader.wins > 0 ? RACER_BY_KEY[leader.key].room : "var(--card-2)",
     },
-    you: { title: me?.name ?? "You", sub: "Your streaks, bests and picks, kept in this browser.", wash: "#BBA8FF" },
+    you: { title: me?.name ?? "You", sub: "Your streaks and bests, kept in this browser.", wash: "#BBA8FF" },
   }[tab];
 
   return (

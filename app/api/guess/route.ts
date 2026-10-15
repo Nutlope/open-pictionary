@@ -1,4 +1,3 @@
-import { after } from "next/server";
 import { readRound } from "@/lib/server/round";
 import { askRacer, houseKey, judge, type GuessHistory } from "@/lib/server/together";
 import { houseAllowance, notePlayed, noteSolved, noteSpend, noteWrong } from "@/lib/server/stats";
@@ -75,10 +74,11 @@ export async function POST(req: Request) {
     if (!allow.ok) return errorResponse(allow.reason, 429);
   }
 
-  // Bookkeeping that the player does not wait for runs after the response.
+  // Bookkeeping starts once the verdict is out, and the stream stays open
+  // until it lands: a serverless function can be frozen the moment its
+  // response ends, and writes left in flight were being lost.
   const later: Promise<unknown>[] = [];
-  const defer = (p: Promise<unknown>) => later.push(p.catch(() => {}));
-  after(() => Promise.all(later));
+  const defer = (p: Promise<unknown>) => later.push(p.catch((e) => console.warn("[guess] bookkeeping", e instanceof Error ? e.message : e)));
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -117,6 +117,7 @@ export async function POST(req: Request) {
         });
         if (!timedOut && !blank) console.warn(`[guess] ${racer.id}: ${msg}`);
       } finally {
+        await Promise.all(later);
         controller.close();
       }
     },
@@ -138,6 +139,7 @@ const DEMO_PACE: Record<RacerKey, number> = {
   "minimax-m3": 1000,
   "deepseek-v4-1-flash": 700,
   "muse-glimmer": 1300,
+  "nemotron-3-5-super": 750,
 };
 
 async function demoGuess(

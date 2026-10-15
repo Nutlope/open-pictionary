@@ -54,7 +54,6 @@ export function FieldList({
   phase,
   winner,
   wins,
-  pick,
   dozing,
   onOpen,
 }: {
@@ -62,7 +61,6 @@ export function FieldList({
   phase: Phase;
   winner: RacerKey | null;
   wins?: Partial<Record<RacerKey, number>>;
-  pick?: RacerKey | null;
   dozing?: boolean;
   onOpen?: (k: RacerKey, from: DOMRect) => void;
 }) {
@@ -74,7 +72,6 @@ export function FieldList({
       isWinner={l.key === winner && (phase === "won" || phase === "over")}
       winner={winner}
       wins={wins?.[l.key] ?? 0}
-      picked={pick === l.key}
       dozing={dozing}
       onOpen={onOpen}
       compact={compact}
@@ -83,7 +80,7 @@ export function FieldList({
   return (
     <>
       <ul className="hidden flex-col gap-2 lg:flex">{lanes.map((l) => row(l))}</ul>
-      <ul className="grid grid-cols-2 gap-2 lg:hidden">{lanes.map((l) => row(l, true))}</ul>
+      <ul className="grid grid-cols-2 gap-2 lg:hidden [&>li:last-child:nth-child(odd)]:col-span-2">{lanes.map((l) => row(l, true))}</ul>
     </>
   );
 }

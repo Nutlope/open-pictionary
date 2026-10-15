@@ -28,7 +28,7 @@ export function Table({
   fieldHead?: React.ReactNode;
   field: React.ReactNode;
   fieldFoot?: React.ReactNode;
-  /** Beside the makers, bottom left. */
+  /** Phone-only controls, on their own row above the credits. */
   footer?: React.ReactNode;
   children?: React.ReactNode;
 }) {
@@ -48,11 +48,9 @@ export function Table({
         <div className="min-w-0 pt-3 lg:col-start-2 lg:row-start-3">{fieldFoot}</div>
       </main>
 
-      <footer className="mx-auto flex w-full max-w-[1680px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 pb-5 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2">
-          <Makers />
-          {footer}
-        </div>
+      <footer className="mx-auto flex w-full max-w-[1680px] flex-wrap items-center justify-between gap-x-6 gap-y-4 px-4 pb-5 sm:px-6 lg:px-8">
+        {footer ? <div className="w-full md:hidden">{footer}</div> : null}
+        <Makers />
         <TogetherCredit />
       </footer>
       {children}

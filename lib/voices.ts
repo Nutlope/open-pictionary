@@ -5,7 +5,7 @@ import type { RacerKey } from "./racers";
  * for the moments that matter. Shown in speech bubbles, never more than a
  * couple at once, so the table stays calm.
  */
-export type Moment = "win" | "also" | "wrong" | "close" | "lose" | "stumped" | "picked" | "doze";
+export type Moment = "win" | "also" | "wrong" | "close" | "lose" | "stumped" | "doze";
 
 type Voice = { vibe: string; bio: string; lines: Record<Moment, string[]> };
 
@@ -20,7 +20,6 @@ export const VOICES: Record<RacerKey, Voice> = {
       close: ["so close", "almost"],
       lose: ["lucky", "rigged", "pfft"],
       stumped: ["art?", "bold."],
-      picked: ["smart", "obviously"],
       doze: ["zzz"],
     },
   },
@@ -34,7 +33,6 @@ export const VOICES: Record<RacerKey, Voice> = {
       close: ["nearly", "warmer"],
       lose: ["well played", "noted"],
       stumped: ["inconclusive"],
-      picked: ["an honor"],
       doze: ["zzz"],
     },
   },
@@ -48,7 +46,6 @@ export const VOICES: Record<RacerKey, Voice> = {
       close: ["ooh!", "so close!"],
       lose: ["aww", "rematch!"],
       stumped: ["?!"],
-      picked: ["let's go!"],
       doze: ["zzz"],
     },
   },
@@ -62,7 +59,6 @@ export const VOICES: Record<RacerKey, Voice> = {
       close: ["so close!", "almost!"],
       lose: ["whatever", "hmph"],
       stumped: ["a crime"],
-      picked: ["finally"],
       doze: ["zzz"],
     },
   },
@@ -76,7 +72,6 @@ export const VOICES: Record<RacerKey, Voice> = {
       close: ["near"],
       lose: ["so be it", "fair"],
       stumped: ["a mystery"],
-      picked: ["ready"],
       doze: ["zzz"],
     },
   },
@@ -90,7 +85,19 @@ export const VOICES: Record<RacerKey, Voice> = {
       close: ["warm…", "so near"],
       lose: ["sigh", "next time"],
       stumped: ["pure art", "a mood"],
-      picked: ["aw, me?", "inspiring"],
+      doze: ["zzz"],
+    },
+  },
+  "nemotron-3-5-super": {
+    vibe: "the new kid",
+    bio: "NVIDIA's newest vision model, on the field the day it shipped.",
+    lines: {
+      win: ["day one!", "rendered.", "gg"],
+      also: ["same", "got it too"],
+      wrong: ["lag", "recompiling"],
+      close: ["so close", "almost"],
+      lose: ["next patch", "noted"],
+      stumped: ["404"],
       doze: ["zzz"],
     },
   },

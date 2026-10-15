@@ -10,7 +10,7 @@ import { readPulse } from "@/lib/server/stats";
 import { GLYPH_PATH } from "@/lib/creatures";
 import { INK, OgCreature, ogFonts } from "@/lib/og";
 
-export const alt = "Daily doodle: one word for everyone, six AI models racing to guess it.";
+export const alt = "Daily doodle: one word for everyone, seven AI models racing to guess it.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export default async function Image() {
             <span style={{ fontSize: 190, fontWeight: 800, lineHeight: 0.86, letterSpacing: "-0.06em" }}>#{d}</span>
           </div>
           <div style={{ display: "flex", fontSize: 28, fontWeight: 600, opacity: 0.66, letterSpacing: "-0.02em" }}>
-            {players > 0 ? `${players.toLocaleString("en-US")} drew it so far. Your turn.` : "One word for everyone. Six AIs guess."}
+            {players > 0 ? `${players.toLocaleString("en-US")} drew it so far. Your turn.` : "One word for everyone. Seven AIs guess."}
           </div>
         </div>
 
@@ -61,10 +61,10 @@ export default async function Image() {
             <path d="M40 80 C 44 30, 110 10, 150 30 C 200 56, 190 110, 150 132 C 118 150, 112 170, 114 200" />
             <path d="M114 262 L 115 264" strokeWidth="24" />
           </svg>
-          <div style={{ position: "absolute", bottom: -14, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 8 }}>
+          <div style={{ position: "absolute", bottom: -14, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 4 }}>
             {RACERS.map((r) => (
-              <div key={r.key} style={{ display: "flex", width: 70, justifyContent: "center" }}>
-                <OgCreature k={r.key} size={62} />
+              <div key={r.key} style={{ display: "flex", width: 64, justifyContent: "center" }}>
+                <OgCreature k={r.key} size={56} />
               </div>
             ))}
           </div>

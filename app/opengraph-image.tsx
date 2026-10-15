@@ -1,6 +1,6 @@
 /**
  * The link card for the game itself. It explains the whole thing in one
- * picture: a doodle on paper, six creatures peeking over the edge, five wrong
+ * picture: a doodle on paper, seven creatures peeking over the edge, six wrong
  * guesses struck through and one right one stamped. Five words of copy.
  */
 import { ImageResponse } from "next/og";
@@ -9,7 +9,7 @@ import { RACERS, type RacerKey } from "@/lib/racers";
 import { INK, OgCreature, ogFonts } from "@/lib/og";
 import { GLYPH_PATH } from "@/lib/creatures";
 
-export const alt = `${BRAND.name}: you draw, six AI models race to guess it.`;
+export const alt = `${BRAND.name}: you draw, seven AI models race to guess it.`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -20,6 +20,7 @@ const GUESSES: Record<RacerKey, { text: string; right?: boolean }> = {
   "minimax-m3": { text: "bunny" },
   "deepseek-v4-1-flash": { text: "mouse" },
   "muse-glimmer": { text: "tiger" },
+  "nemotron-3-5-super": { text: "lynx" },
 };
 
 export default async function Image() {
@@ -42,7 +43,7 @@ export default async function Image() {
             <span>AIs race</span>
             <span>to guess.</span>
           </div>
-          <div style={{ display: "flex", fontSize: 26, fontWeight: 600, opacity: 0.62, letterSpacing: "-0.02em" }}>six open models, live</div>
+          <div style={{ display: "flex", fontSize: 26, fontWeight: 600, opacity: 0.62, letterSpacing: "-0.02em" }}>seven open models, live</div>
         </div>
 
         {/* right: the paper, the doodle, the field */}
@@ -73,7 +74,7 @@ export default async function Image() {
           </svg>
 
           {/* guesses, in a row of speech bubbles */}
-          <div style={{ position: "absolute", bottom: 72, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 8 }}>
+          <div style={{ position: "absolute", bottom: 72, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 5 }}>
             {RACERS.map((r) => {
               const g = GUESSES[r.key];
               return (
@@ -81,14 +82,14 @@ export default async function Image() {
                   key={r.key}
                   style={{
                     display: "flex",
-                    width: 74,
-                    height: 40,
+                    width: 66,
+                    height: 38,
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: 999,
                     background: g.right ? r.color : "#F3EFE8",
                     color: g.right ? "#fff" : "rgba(22,19,15,0.45)",
-                    fontSize: 19,
+                    fontSize: 17,
                     fontWeight: g.right ? 800 : 600,
                     textDecoration: g.right ? "none" : "line-through",
                     letterSpacing: "-0.02em",
@@ -101,10 +102,10 @@ export default async function Image() {
           </div>
 
           {/* the field, peeking over the bottom edge */}
-          <div style={{ position: "absolute", bottom: -14, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 8 }}>
+          <div style={{ position: "absolute", bottom: -14, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 5 }}>
             {RACERS.map((r) => (
-              <div key={r.key} style={{ display: "flex", width: 74, justifyContent: "center" }}>
-                <OgCreature k={r.key} size={66} mood={GUESSES[r.key].right ? "happy" : "idle"} />
+              <div key={r.key} style={{ display: "flex", width: 66, justifyContent: "center" }}>
+                <OgCreature k={r.key} size={60} mood={GUESSES[r.key].right ? "happy" : "idle"} />
               </div>
             ))}
           </div>

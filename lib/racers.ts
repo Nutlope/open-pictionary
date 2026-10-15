@@ -1,6 +1,6 @@
 /**
  * The racers. One open vision model per lab, so the race is between genuinely
- * different model families rather than six sizes of the same one.
+ * different model families rather than seven sizes of the same one.
  *
  * Verified live on 2026-10-09 against GET /v1/models plus a real image call per
  * model. Notes from those runs, so nobody re-learns them:
@@ -11,6 +11,8 @@
  *   reasons for hundreds of tokens on a hard sketch and runs out of budget
  *   before it answers. Each entry carries the switch that took that model to
  *   a no-reasoning answer, tested on an ambiguous sketch, not an easy one.
+ * - Nemotron 3.5 Super VL (added 2026-10-15, the day it landed) sees sketches
+ *   and answers in about half a second with enable_thinking off.
  * - Muse Glimmer has no off switch. It always reasons a little first (about
  *   50 to 90 tokens at low effort), so its cap leaves room for that.
  * - Qwen3.8 Flash rejects reasoning_effort alongside enable_thinking: false.
@@ -30,9 +32,10 @@ export type RacerKey =
   | "glm-5-3-flash"
   | "minimax-m3"
   | "deepseek-v4-1-flash"
-  | "muse-glimmer";
+  | "muse-glimmer"
+  | "nemotron-3-5-super";
 
-export type Shape = "circle" | "square" | "triangle" | "pill" | "drop" | "flower";
+export type Shape = "circle" | "square" | "triangle" | "pill" | "drop" | "flower" | "star";
 
 export type Racer = {
   key: RacerKey;
@@ -149,6 +152,21 @@ export const RACERS: Racer[] = [
     outPerM: 1.5,
     params: { reasoning_effort: "low" },
     maxTokens: 240,
+  },
+  {
+    key: "nemotron-3-5-super",
+    id: "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+    label: "Nemotron 3.5 Super",
+    short: "Nemotron",
+    color: "#00B2D6",
+    heart: "🩵",
+    shape: "star",
+    room: "#8FE6F5",
+    lab: "NVIDIA",
+    inPerM: 0.15,
+    outPerM: 0.5,
+    params: { chat_template_kwargs: { enable_thinking: false } },
+    maxTokens: 24,
   },
 ];
 

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, MotionConfig, motion, useAnimationControls } from "motion/react";
 import { IconArrowRight, IconCheck, IconCornerDownLeft, IconPencil, IconPlayerPlay, IconRotateClockwise } from "@tabler/icons-react";
-import { RACER_BY_KEY } from "@/lib/racers";
+import { RACERS, RACER_BY_KEY } from "@/lib/racers";
 import { CROWN_PATH } from "@/lib/creatures";
 import { SPACE, paint, strokeAt, type Stroke } from "@/lib/sketch";
 import { fmtSec, type Replay as ReplayDoc } from "@/lib/replay";
@@ -249,8 +249,8 @@ export function Replay({ doc, also }: { doc: ReplayDoc; also: string[] }) {
   const brag = async () => {
     const text =
       aiAt == null
-        ? `I guessed a doodle that stumped six AI models, in ${fmtSec(youAt!)}. Can you?`
-        : `I guessed this doodle ${fmtSec(aiAt - youAt!)} faster than six AI models. Can you?`;
+        ? `I guessed a doodle that stumped seven AI models, in ${fmtSec(youAt!)}. Can you?`
+        : `I guessed this doodle ${fmtSec(aiAt - youAt!)} faster than seven AI models. Can you?`;
     if ("share" in navigator && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
       try {
         await navigator.share({ text, url: location.href });
@@ -354,7 +354,7 @@ export function Replay({ doc, also }: { doc: ReplayDoc; also: string[] }) {
                   title={title}
                   notes={[
                     <Note key="n">
-                      {youWon ? `${solvers} of 6 models got it after you` : solvers > 0 ? `${solvers} of 6 models got it` : "none of the six got it"}
+                      {youWon ? `${solvers} of ${RACERS.length} models got it after you` : solvers > 0 ? `${solvers} of ${RACERS.length} models got it` : "none of them got it"}
                     </Note>,
                     ...(doc.demo ? [<Note key="d">demo guesses</Note>] : []),
                   ]}
@@ -446,7 +446,7 @@ export function Replay({ doc, also }: { doc: ReplayDoc; also: string[] }) {
             )}
           </AnimatePresence>
         }
-        fieldHead={<FieldHead today={null} note={mine.length ? "you vs six open models" : "replaying live"} />}
+        fieldHead={<FieldHead today={null} note={mine.length ? "you vs seven open models" : "replaying live"} />}
         field={
           <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-col">
             {mine.length || open ? <YouRow guesses={mine} solvedAt={youAt} open={open} /> : null}

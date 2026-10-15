@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   try {
     const board = await readDaily(d, mine);
     return NextResponse.json(board, {
-      headers: { "Cache-Control": mine ? "no-store" : "public, s-maxage=10, stale-while-revalidate=60" },
+      headers: { "Cache-Control": "no-store" },
     });
   } catch {
     return NextResponse.json({ error: "The daily board is unavailable right now." }, { status: 503 });

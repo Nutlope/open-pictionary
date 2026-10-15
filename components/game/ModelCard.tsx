@@ -9,7 +9,6 @@ import { fmtSec } from "@/lib/replay";
 import { cn } from "@/lib/utils";
 import { Creature, type Pulse } from "./Creature";
 import { useBoard } from "./live";
-import { useMe } from "./me";
 import { onSession, readSession } from "./session";
 import { useScrollLock } from "./useScrollLock";
 import { useWide } from "./useWide";
@@ -46,7 +45,6 @@ export function ModelCard({ target, onClose }: { target: CardTarget; onClose: ()
   const [pulse, setPulse] = useState<Pulse>(null);
   const wide = useWide();
   const { data } = useBoard(!!target);
-  const me = useMe();
   const [mine, setMine] = useState<{ rounds: number; wins: number } | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   useScrollLock(!!target);
@@ -92,7 +90,6 @@ export function ModelCard({ target, onClose }: { target: CardTarget; onClose: ()
   const racer = k ? RACER_BY_KEY[k] : null;
   const row = k ? data?.rows.find((r) => r.key === k) : null;
   const voice = k ? VOICES[k] : null;
-  const backed = k && me ? me.picks.by[k] : undefined;
 
   // Grow out of whatever was tapped.
   const from = target?.from;
@@ -171,7 +168,7 @@ export function ModelCard({ target, onClose }: { target: CardTarget; onClose: ()
                 ) : null}
                 <Row label="With you">
                   {mine && mine.rounds
-                    ? `won ${mine.wins} of your ${mine.rounds} ${mine.rounds === 1 ? "round" : "rounds"}${backed ? `, came through ${backed[1]} of ${backed[0]} ${backed[0] === 1 ? "time" : "times"} you backed it` : ""}`
+                    ? `won ${mine.wins} of your ${mine.rounds} ${mine.rounds === 1 ? "round" : "rounds"}`
                     : "no rounds together yet"}
                 </Row>
               </div>

@@ -5,7 +5,7 @@ import { fmtSec } from "@/lib/replay";
 import { INK, OgCreature, doodle, ogFonts } from "@/lib/og";
 import { GLYPH_PATH } from "@/lib/creatures";
 
-export const alt = "A doodle six AI models raced to guess";
+export const alt = "A doodle seven AI models raced to guess";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -81,14 +81,14 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ display: "flex", fontSize: 62, fontWeight: 800, lineHeight: 0.98, letterSpacing: "-0.045em" }}>
-              {winner && doc?.winMs != null ? `${winner.label} guessed my doodle in ${fmtSec(doc.winMs)}` : "Six AIs tried to guess my doodle. None did."}
+              {winner && doc?.winMs != null ? `${winner.label} guessed my doodle in ${fmtSec(doc.winMs)}` : "Seven AIs tried to guess my doodle. None did."}
             </div>
             <div style={{ display: "flex", fontSize: 28, fontWeight: 600, opacity: 0.7, letterSpacing: "-0.02em" }}>
               {winner ? "Can you guess it faster?" : "Can you guess it? They couldn't."}
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 6 }}>
             {RACERS.map((r) => {
               const t = solvedBy.get(r.key);
               return (
@@ -102,11 +102,11 @@ export default async function Image({ params }: { params: Promise<{ id: string }
                     background: "rgba(255,255,255,0.55)",
                     borderRadius: 18,
                     padding: "10px 0 8px",
-                    width: 80,
+                    width: 72,
                   }}
                 >
                   <OgCreature k={r.key} size={42} mood={t != null ? "happy" : "sad"} />
-                  <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", opacity: t != null ? 1 : 0.35 }}>
+                  <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", opacity: t != null ? 1 : 0.35 }}>
                     {t != null ? fmtSec(t) : "missed"}
                   </span>
                 </div>

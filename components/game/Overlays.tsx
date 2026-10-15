@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { IconArrowRight, IconHeartFilled, IconShare2 } from "@tabler/icons-react";
+import { IconArrowRight, IconShare2 } from "@tabler/icons-react";
 import { RACERS, RACER_BY_KEY, onColor, type RacerKey } from "@/lib/racers";
-import { say } from "@/lib/voices";
 import { cn } from "@/lib/utils";
-import { Creature, type Pulse } from "./Creature";
+import { Creature } from "./Creature";
 
 const spring = { type: "spring", stiffness: 480, damping: 34 } as const;
 
@@ -20,19 +19,14 @@ const GHOST_RAYS = Array.from({ length: 8 }, (_, i) => {
 });
 
 /**
- * The first visit only: a ghost hand sketches a sun and one of the field
- * calls it. Three seconds that explain the whole game, and gone the moment
- * the visitor starts drawing.
+ * The first visit only: a ghost hand sketches a sun. Three seconds that
+ * explain the whole game, gone the moment the visitor starts drawing.
  */
-function Ghost({ onCall, onDone }: { onCall: () => void; onDone: () => void }) {
+function Ghost({ onDone }: { onDone: () => void }) {
   useEffect(() => {
-    const a = setTimeout(onCall, 1650);
-    const b = setTimeout(onDone, 3300);
-    return () => {
-      clearTimeout(a);
-      clearTimeout(b);
-    };
-  }, [onCall, onDone]);
+    const t = setTimeout(onDone, 3300);
+    return () => clearTimeout(t);
+  }, [onDone]);
   return (
     <motion.div key="ghost" initial={{ opacity: 1 }} animate={{ opacity: [1, 1, 0] }} transition={{ duration: 3.3, times: [0, 0.85, 1] }} className="flex flex-col items-center">
       <svg viewBox="0 0 200 200" className="size-40 text-ink/30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" aria-hidden>
@@ -51,45 +45,9 @@ function Ghost({ onCall, onDone }: { onCall: () => void; onDone: () => void }) {
   );
 }
 
-/**
- * The empty paper. The field waits along the bottom edge, and any one of
- * them can be backed with a tap before the first stroke. Never required:
- * drawing straight away is just as good.
- */
-export function Lineup({
-  pick,
-  onPick,
-  dozing,
-  demo = false,
-  onDemoDone,
-}: {
-  pick: RacerKey | null;
-  onPick: (k: RacerKey | null) => void;
-  dozing: boolean;
-  /** Play the first-visit ghost sketch. */
-  demo?: boolean;
-  onDemoDone?: () => void;
-}) {
-  const [line, setLine] = useState<{ k: RacerKey; text: string; n: number } | null>(null);
-  const [cheer, setCheer] = useState<{ k: RacerKey; pulse: Pulse } | null>(null);
-  const call = useCallback(() => {
-    const n = Date.now();
-    setLine({ k: "glm-5-3-flash", text: "sun!", n });
-    setCheer({ k: "glm-5-3-flash", pulse: { kind: "jump", n } });
-    setTimeout(() => setLine((l) => (l?.n === n ? null : l)), 1400);
-  }, []);
+/** The empty paper: an invitation to draw, and the field nodding off if nobody does. */
+export function Lineup({ dozing, demo = false, onDemoDone }: { dozing: boolean; demo?: boolean; onDemoDone?: () => void }) {
   const finish = useCallback(() => onDemoDone?.(), [onDemoDone]);
-  const choose = (k: RacerKey) => {
-    const next = pick === k ? null : k;
-    onPick(next);
-    if (next) {
-      const n = Date.now();
-      setLine({ k: next, text: say(next, "picked"), n });
-      setTimeout(() => setLine((l) => (l?.n === n ? null : l)), 1600);
-    } else setLine(null);
-  };
-  const backed = pick ? RACER_BY_KEY[pick] : null;
-
   return (
     <motion.div
       key="lineup"
@@ -100,101 +58,14 @@ export function Lineup({
     >
       <AnimatePresence mode="wait" initial={false}>
         {demo ? (
-          <Ghost key="ghost" onCall={call} onDone={finish} />
+          <Ghost key="ghost" onDone={finish} />
         ) : (
           <motion.div key="ask" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="flex flex-col items-center">
-            <p className="tx-display text-ink-3">Start drawing</p>
-            <p className="tx-small mt-1.5 max-w-[16rem] text-ink-3">The clock starts with your first stroke.</p>
+            <p className="tx-display text-ink-3">{dozing ? "Still there?" : "Start drawing"}</p>
+            <p className="tx-small mt-1.5 max-w-[16rem] text-ink-3">{dozing ? "The field nodded off. One stroke wakes them." : "The clock starts with your first stroke."}</p>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="absolute inset-x-0 bottom-0 flex flex-col items-center">
-        {/* A creature talking takes the line; the hint steps aside so the two never overlap. */}
-        <motion.div className="tx-small mb-1 flex h-6 items-center text-ink-3" animate={{ opacity: line ? 0 : 1 }} transition={{ duration: 0.18 }}>
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.span
-              key={backed?.key ?? "ask"}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={spring}
-              className="flex items-center gap-1"
-            >
-              {backed ? (
-                <>
-                  <IconHeartFilled size={13} style={{ color: backed.color }} />
-                  You&apos;re backing <span className="font-semibold text-ink-2">{backed.short}</span>
-                </>
-              ) : (
-                "Who gets it first? Tap to back one"
-              )}
-            </motion.span>
-          </AnimatePresence>
-        </motion.div>
-        <div className="flex justify-center gap-2 sm:gap-2.5" role="radiogroup" aria-label="Back a model to win">
-          {RACERS.map((r, i) => {
-            const on = pick === r.key;
-            const dim = pick != null && !on;
-            return (
-              <motion.button
-                key={r.key}
-                type="button"
-                role="radio"
-                aria-checked={on}
-                aria-label={`Back ${r.label}`}
-                onClick={() => choose(r.key)}
-                className="pointer-events-auto relative -mb-3 rounded-full outline-offset-0"
-                initial={{ y: 40 }}
-                animate={{ y: on ? -10 : 0, opacity: dim ? 0.5 : 1, scale: dim ? 0.92 : 1 }}
-                whileHover={{ y: on ? -12 : -6 }}
-                whileTap={{ scale: 0.9 }}
-                exit={{ y: 40 }}
-                transition={{ type: "spring", stiffness: 380, damping: 18, delay: on || dim ? 0 : 0.15 + i * 0.05 }}
-              >
-                <AnimatePresence>
-                  {line?.k === r.key ? (
-                    <motion.span
-                      key={line.n}
-                      initial={{ opacity: 0, scale: 0.4, y: 6 }}
-                      animate={{ opacity: 1, scale: 1, y: 0, rotate: -4 }}
-                      exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.15 } }}
-                      transition={{ type: "spring", stiffness: 620, damping: 22 }}
-                      style={{ transformOrigin: "12px 100%" }}
-                      className="speech absolute bottom-[calc(100%+22px)] left-1/2 z-10 -ml-3 whitespace-nowrap rounded-full bg-ink px-2.5 py-1 text-[0.75rem] font-semibold text-white"
-                    >
-                      {line.text}
-                    </motion.span>
-                  ) : null}
-                </AnimatePresence>
-                <AnimatePresence>
-                  {on ? (
-                    <motion.span
-                      key="heart"
-                      initial={{ scale: 0, y: 8 }}
-                      animate={{ scale: 1, y: 0 }}
-                      exit={{ scale: 0, y: 8 }}
-                      transition={{ type: "spring", stiffness: 600, damping: 16 }}
-                      className="absolute -top-4 left-1/2 -ml-[7px] flex"
-                      style={{ color: r.color }}
-                    >
-                      <IconHeartFilled size={14} />
-                    </motion.span>
-                  ) : null}
-                </AnimatePresence>
-                <div className={on ? undefined : "idle-bob"} style={{ animationDelay: `${i * -0.5}s` }}>
-                  <Creature
-                    k={r.key}
-                    size={40}
-                    mood={on || cheer?.k === r.key ? "happy" : dozing ? "sleepy" : "idle"}
-                    pulse={cheer?.k === r.key ? cheer.pulse : null}
-                  />
-                </div>
-              </motion.button>
-            );
-          })}
-        </div>
-      </div>
     </motion.div>
   );
 }
