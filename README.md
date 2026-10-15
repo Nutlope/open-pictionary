@@ -1,40 +1,31 @@
+<a href="https://doodle-derby-eight.vercel.app">
+  <img alt="Doodle Derby" src="./docs/img/og.png">
+  <h1 align="center">Doodle Derby</h1>
+</a>
+
 <p align="center">
-  <a href="https://doodle-derby-eight.vercel.app"><img alt="doodle derby" src="docs/img/og.png"></a>
+  Draw a word and watch seven open vision models race to guess it live. Powered by Together AI.
 </p>
-
-<h1 align="center">doodle derby</h1>
-
-<p align="center">You draw a word, six open vision models race to guess it live, and the first right answer wins. <a href="https://doodle-derby-eight.vercel.app">doodle-derby-eight.vercel.app</a></p>
 
 ## Tech stack
 
-- Next.js 16 (App Router, Node runtime), React 19, Tailwind 4, Motion for the springs, one typeface (Bricolage Grotesque)
-- Six models from six labs on Together AI serverless: Kimi K3, DeepSeek V4.1 Flash, Qwen3.8 Flash, Muse Glimmer, GLM-5.3 Flash, MiniMax M3, each with its own thinking-off switch in `lib/racers.ts`
-- Each look streams a 384px crop of the ink; slow looks are hedged with a twin request after 2.8s, and guesses come back as NDJSON so they land before the verdict
-- Referee: a synonym list per word, then GLM-5.3 Flash for anything the list cannot settle; rounds are HMAC-signed tickets, so judging and the global board stay server side
-- Share links replay the round stroke by stroke with the word hidden and a box for friends to guess it first; with Redis they are short ids, without it the replay rides in the link, compressed and signed
-- Daily doodle at `/daily`: one word a day from a fixed shuffle of the deck, one try, a board of the fastest guessed doodles, and a pasteable heart line per result
-- Video clips are drawn frame by frame on a canvas and encoded to H.264 MP4 in the browser (WebCodecs plus Mediabunny, loaded on demand)
-- Streaks, personal bests and champion picks live in the browser; model cards, the live counter and the wrong guess of the day (picked by Qwen3.8 Flash from the day's misses) come from the store
-- Upstash Redis (REST, via the Vercel marketplace) for the global board, dailies, rate limits and short links; local dev falls back to `.data/store.json`
+- [Together AI](https://www.together.ai) for inference, with seven vision models from seven labs: Kimi K3, Qwen3.8 Flash, GLM-5.3 Flash, MiniMax M3, DeepSeek V4.1 Flash, Muse Glimmer and Nemotron 3.5 Super
+- GLM-5.3 Flash as the referee for guesses the synonym list can't settle
+- [Upstash Redis](https://upstash.com) for the global leaderboard, the daily board and share links
+- Next.js app router with Tailwind and Motion
+- [Mediabunny](https://mediabunny.dev) to turn each round into a shareable video, right in the browser
+- Vercel for hosting
+
+## How it works
+
+1. You draw on a canvas. Every bit of new ink, each model gets a small snapshot of the sketch.
+2. All seven models stream their guesses at once, with thinking switched off so they answer in about a second.
+3. Each guess is judged on the server, and the first correct one wins the round.
+4. Every result goes to a global leaderboard, and a daily word lets everyone compete on the same drawing.
 
 ## Cloning & running
 
-1. Clone: `git clone https://github.com/Luffixos/doodle-derby.git && cd doodle-derby`
-2. Install: `pnpm install`
-3. Configure: `cp .env.example .env.local`, then set `TOGETHER_API_KEY` (without it the game runs on labelled demo guesses)
-4. Run: `pnpm dev`, then open http://localhost:3000
-5. Check: `pnpm typecheck && pnpm build`
-
-## Roadmap
-
-- [x] hook up Upstash in production so the boards, dailies, counter and short links are shared by every server
-- [x] add a daily word everyone draws, with its own board
-- [ ] let me pick a pen color without changing what the models see
-- [ ] add a report button to daily thumbnails before the board gets busy
-- [ ] re-run the model probe monthly and swap in new vision models as they land
-- Multiplayer drawing is skipped on purpose: the race is you against the models, and a second artist muddies who made them guess.
-
-## Security
-
-`TOGETHER_API_KEY` is read on the server only; a visitor's own key stays in their browser's localStorage and rides along per request, never stored or logged. The free house key is capped per IP per hour (`FREE_GUESSES_PER_HOUR`) and per day in dollars (`DAILY_BUDGET_USD`). Private repository, all rights reserved.
+1. Clone the repo: `git clone https://github.com/Luffixos/doodle-derby`
+2. Create a `.env.local` file and add your [Together AI API key](https://api.together.ai/settings/api-keys): `TOGETHER_API_KEY=`
+3. Optionally add `KV_REST_API_URL` and `KV_REST_API_TOKEN` from [Upstash](https://upstash.com) for a shared leaderboard (without them it saves to `.data/` locally)
+4. Run `pnpm install` and `pnpm dev` to install dependencies and run locally
