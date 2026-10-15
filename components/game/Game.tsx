@@ -24,7 +24,7 @@ import { Table } from "./Table";
 import { BoardButton, DailyPill, Dock, SoundToggle, StarButton } from "./Nav";
 import { Lineup, Note, ResultBar, Stamp } from "./Overlays";
 import { FieldHead, FieldList, Ticker, WrongCard } from "./Field";
-import { Level, StreakChip, Word } from "./Word";
+import { StreakChip, Word } from "./Word";
 import { lanesAt, solveOrder, standings } from "./lanes";
 import { liveDailyStreak, readMe, recordDaily, recordOutcome, updateDaily, useMe, type DailyRecord, type Outcome } from "./me";
 import { board as boardStore, pulse as pulseStore, usePulse, type Pulse } from "./live";
@@ -493,25 +493,22 @@ export function Game({
         word={
           <div className="flex items-end justify-between gap-4">
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                {challenge ? (
-                  <span className="tx-label inline-flex items-center gap-1.5 rounded-full bg-ink py-1 pr-3 pl-1 text-white">
-                    {challenge.winner ? <Creature k={challenge.winner} size={20} /> : <span className="size-5" />}
-                    {challenge.winner && challenge.ms != null ? `A friend's doodle got guessed in ${fmtSec(challenge.ms)}. Beat it.` : "Nobody guessed a friend's doodle. Can you?"}
-                  </span>
-                ) : (
-                  <>
-                    <span className="tx-label text-ink-2">{phase === "loading" ? "Dealing…" : isDaily ? `Daily doodle #${d}` : "Your word"}</span>
-                    {deal ? <Level level={deal.level} /> : null}
-                    {isDaily ? (
-                      <StreakChip n={dailyStreak} unit={dailyStreak === 1 ? "day" : "days"} title="Days in a row you've drawn the daily" />
-                    ) : (
-                      <StreakChip n={me?.streak ?? 0} title="Doodles in a row that got guessed" />
-                    )}
-                  </>
-                )}
-              </div>
-              <div className="mt-1.5 min-h-[3.25rem] overflow-hidden pb-1">{deal ? <Word word={deal.word} /> : null}</div>
+              {/* Only shows when it has something to say: a friend's time to beat, or a streak. */}
+              {challenge ? (
+                <span className="tx-label mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-ink py-1 pr-3 pl-1 text-white">
+                  {challenge.winner ? <Creature k={challenge.winner} size={20} /> : <span className="size-5" />}
+                  {challenge.winner && challenge.ms != null ? `A friend's doodle got guessed in ${fmtSec(challenge.ms)}. Beat it.` : "Nobody guessed a friend's doodle. Can you?"}
+                </span>
+              ) : (
+                <div className="mb-1.5 flex empty:hidden">
+                  {isDaily ? (
+                    <StreakChip n={dailyStreak} unit={dailyStreak === 1 ? "day" : "days"} title="Days in a row you've drawn the daily" />
+                  ) : (
+                    <StreakChip n={me?.streak ?? 0} title="Doodles in a row that got guessed" />
+                  )}
+                </div>
+              )}
+              <div className="min-h-[3.25rem] overflow-hidden pb-1">{deal ? <Word word={deal.word} /> : null}</div>
             </div>
             <div className="shrink-0 pb-1">
               <AnimatePresence mode="popLayout" initial={false}>

@@ -7,8 +7,8 @@ export const BRAND = {
   tagline: "You draw. Seven open models race to guess it.",
   company: "Together AI",
 
-  repo: "Luffixos/doodle-derby",
-  repoUrl: "https://github.com/Luffixos/doodle-derby",
+  repo: "Nutlope/doodle-derby",
+  repoUrl: "https://github.com/Nutlope/doodle-derby",
   makers: [
     { name: "Youssef", url: "https://github.com/Luffixos" },
     { name: "Hassan", url: "https://github.com/Nutlope" },

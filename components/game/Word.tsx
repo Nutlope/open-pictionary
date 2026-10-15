@@ -2,23 +2,6 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { IconFlameFilled } from "@tabler/icons-react";
-import { cn } from "@/lib/utils";
-
-const LEVEL = { 1: "easy", 2: "medium", 3: "hard" } as const;
-
-/** Difficulty as three dots, not a shouty label. */
-export function Level({ level }: { level: 1 | 2 | 3 }) {
-  return (
-    <span className="tx-label inline-flex items-center gap-1.5 rounded-full bg-white/45 py-1 pr-2.5 pl-2 text-ink-2" title={`${LEVEL[level]} word`}>
-      <span className="flex gap-[3px]" aria-hidden>
-        {[1, 2, 3].map((i) => (
-          <span key={i} className={cn("size-[6px] rounded-full", i <= level ? "bg-ink" : "bg-ink/20")} />
-        ))}
-      </span>
-      {LEVEL[level]}
-    </span>
-  );
-}
 
 /**
  * The streak, as a small flame that only shows up once there is something to

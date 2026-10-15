@@ -1,138 +1,140 @@
 /**
- * The link card for the game itself. It explains the whole thing in one
- * picture: a doodle on paper, seven creatures peeking over the edge, six wrong
- * guesses struck through and one right one stamped. Five words of copy.
+ * The link card for the game itself. One question on the left; on the right,
+ * a round as it ends: the doodle, and the seven models by their lab logos,
+ * the ones that got it with their times and the rest with their misses.
  */
 import { ImageResponse } from "next/og";
 import { BRAND } from "@/lib/brand";
 import { RACERS, type RacerKey } from "@/lib/racers";
-import { INK, OgCreature, ogFonts } from "@/lib/og";
+import { LAB_LOGO } from "@/lib/logos";
+import { INK, ogFonts } from "@/lib/og";
 import { GLYPH_PATH } from "@/lib/creatures";
 
-export const alt = `${BRAND.name}: you draw, seven AI models race to guess it.`;
+export const alt = `${BRAND.name}: can AI guess your doodle? Seven open models race to find out.`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const GUESSES: Record<RacerKey, { text: string; right?: boolean }> = {
-  "kimi-k3": { text: "cat", right: true },
-  "qwen3-8-flash": { text: "fox" },
-  "glm-5-3-flash": { text: "owl" },
-  "minimax-m3": { text: "bunny" },
-  "deepseek-v4-1-flash": { text: "mouse" },
-  "muse-glimmer": { text: "tiger" },
-  "nemotron-3-5-super": { text: "lynx" },
+/** Who said what. Solvers carry their time; the first one won. */
+const ROUND: Record<RacerKey, { g: string; ms?: number }> = {
+  "kimi-k3": { g: "cat", ms: 1.1 },
+  "deepseek-v4-1-flash": { g: "cat", ms: 1.6 },
+  "nemotron-3-5-super": { g: "cat", ms: 2.3 },
+  "qwen3-8-flash": { g: "fox" },
+  "glm-5-3-flash": { g: "owl" },
+  "minimax-m3": { g: "bunny" },
+  "muse-glimmer": { g: "tiger" },
 };
+const ORDER = [...RACERS].sort((a, b) => (ROUND[a.key].ms ?? 99) - (ROUND[b.key].ms ?? 99));
 
 export default async function Image() {
   const fonts = await ogFonts();
   return new ImageResponse(
     (
-      <div style={{ width: "100%", height: "100%", display: "flex", background: "#FFD84A", fontFamily: "Bricolage", color: INK, position: "relative" }}>
-        {/* left: the name and five words */}
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "62px 0 62px 64px", width: 560 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 36, fontWeight: 800, letterSpacing: "-0.04em" }}>
-            <svg width="46" height="46" viewBox="0 0 32 32" fill="none">
+      <div style={{ width: "100%", height: "100%", display: "flex", background: "#FFD84A", fontFamily: "Bricolage", color: INK }}>
+        {/* left: the name and the question */}
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "60px 0 66px 64px", width: 600 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 34, fontWeight: 800, letterSpacing: "-0.04em" }}>
+            <svg width="44" height="44" viewBox="0 0 32 32" fill="none">
               <path d={GLYPH_PATH} stroke={INK} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
               <circle cx="25" cy="13.5" r="4.2" fill="#F2442E" />
               <circle cx="25" cy="13.5" r="1.6" fill={INK} />
             </svg>
             doodle derby
           </div>
-          <div style={{ display: "flex", flexDirection: "column", fontSize: 96, fontWeight: 800, lineHeight: 0.9, letterSpacing: "-0.055em" }}>
-            <span>You draw.</span>
-            <span>AIs race</span>
-            <span>to guess.</span>
+          <div style={{ display: "flex", flexDirection: "column", fontSize: 104, fontWeight: 800, lineHeight: 0.94, letterSpacing: "-0.055em", whiteSpace: "nowrap" }}>
+            <span>Can AI</span>
+            <span>guess your</span>
+            <span>doodle?</span>
           </div>
-          <div style={{ display: "flex", fontSize: 26, fontWeight: 600, opacity: 0.62, letterSpacing: "-0.02em" }}>seven open models, live</div>
         </div>
 
-        {/* right: the paper, the doodle, the field */}
+        {/* right: a round, as it ends */}
         <div
           style={{
             position: "absolute",
-            top: 56,
-            right: 64,
-            width: 520,
-            height: 520,
+            top: 40,
+            right: 56,
+            width: 500,
+            height: 550,
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
             background: "#fff",
-            borderRadius: 40,
+            borderRadius: 36,
+            padding: "22px 22px 18px",
             boxShadow: "0 36px 70px -26px rgba(22,19,15,0.45)",
-            transform: "rotate(2.5deg)",
-            overflow: "hidden",
+            transform: "rotate(2deg)",
           }}
         >
-          <svg width="330" height="294" viewBox="80 80 360 320" fill="none" stroke={INK} strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 34 }}>
-            <path d="M146 214 Q 130 300 170 350 Q 260 420 350 350 Q 392 300 372 214" />
-            <path d="M146 214 L 168 100 L 236 160 Q 260 152 286 160 L 352 100 L 372 214" />
-            <circle cx="212" cy="252" r="10" fill={INK} />
-            <circle cx="306" cy="252" r="10" fill={INK} />
-            <path d="M200 300 L 110 286 M200 318 L 112 322 M318 300 L 408 286 M318 318 L 406 322" strokeWidth="6" />
-            <path d="M236 326 Q 247 340 259 326 Q 271 340 282 326" strokeWidth="6" />
-          </svg>
-
-          {/* guesses, in a row of speech bubbles */}
-          <div style={{ position: "absolute", bottom: 72, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 5 }}>
-            {RACERS.map((r) => {
-              const g = GUESSES[r.key];
+          <div style={{ display: "flex", justifyContent: "center", height: 196 }}>
+            <svg width="210" height="188" viewBox="80 80 360 320" fill="none" stroke={INK} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M146 214 Q 130 300 170 350 Q 260 420 350 350 Q 392 300 372 214" />
+              <path d="M146 214 L 168 100 L 236 160 Q 260 152 286 160 L 352 100 L 372 214" />
+              <circle cx="212" cy="252" r="11" fill={INK} />
+              <circle cx="306" cy="252" r="11" fill={INK} />
+              <path d="M200 300 L 110 286 M200 318 L 112 322 M318 300 L 408 286 M318 318 L 406 322" strokeWidth="7" />
+              <path d="M236 326 Q 247 340 259 326 Q 271 340 282 326" strokeWidth="7" />
+            </svg>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 6 }}>
+            {ORDER.map((r, i) => {
+              const x = ROUND[r.key];
+              const logo = LAB_LOGO[r.key];
+              const won = i === 0;
               return (
                 <div
                   key={r.key}
                   style={{
                     display: "flex",
-                    width: 66,
-                    height: 38,
                     alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 999,
-                    background: g.right ? r.color : "#F3EFE8",
-                    color: g.right ? "#fff" : "rgba(22,19,15,0.45)",
-                    fontSize: 17,
-                    fontWeight: g.right ? 800 : 600,
-                    textDecoration: g.right ? "none" : "line-through",
-                    letterSpacing: "-0.02em",
+                    height: 44,
+                    padding: "0 12px 0 6px",
+                    borderRadius: 14,
+                    background: won ? "#FFF3B8" : "transparent",
                   }}
                 >
-                  {g.right ? `${g.text}!` : g.text}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 34,
+                      height: 34,
+                      borderRadius: 10,
+                      background: logo.tile,
+                      boxShadow: logo.tile === "#ffffff" ? "inset 0 0 0 1.5px rgba(22,19,15,0.1)" : "none",
+                    }}
+                  >
+                    <img src={logo.src} width={22} height={22} alt="" />
+                  </div>
+                  <span style={{ marginLeft: 12, fontSize: 22, fontWeight: 600, letterSpacing: "-0.02em", flex: 1 }}>{r.label}</span>
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
+                      gap: 5,
+                      width: 96,
+                      fontSize: 22,
+                      fontWeight: x.ms != null ? 800 : 600,
+                      letterSpacing: "-0.02em",
+                      opacity: x.ms != null ? 1 : 0.35,
+                      textDecoration: x.ms != null ? "none" : "line-through",
+                    }}
+                  >
+                    {x.g}
+                    {x.ms != null ? (
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={INK} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 8.5 L6.5 12 L13 4.5" />
+                      </svg>
+                    ) : null}
+                  </span>
+                  <span style={{ display: "flex", justifyContent: "flex-end", width: 58, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", opacity: x.ms == null ? 0 : won ? 1 : 0.45 }}>
+                    {x.ms != null ? `${x.ms.toFixed(1)}s` : ""}
+                  </span>
                 </div>
               );
             })}
           </div>
-
-          {/* the field, peeking over the bottom edge */}
-          <div style={{ position: "absolute", bottom: -14, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 5 }}>
-            {RACERS.map((r) => (
-              <div key={r.key} style={{ display: "flex", width: 66, justifyContent: "center" }}>
-                <OgCreature k={r.key} size={60} mood={GUESSES[r.key].right ? "happy" : "idle"} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* the stamp */}
-        <div
-          style={{
-            position: "absolute",
-            top: 34,
-            right: 38,
-            width: 138,
-            height: 138,
-            borderRadius: 999,
-            background: "#F2442E",
-            border: "7px solid #fff",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#fff",
-            transform: "rotate(-12deg)",
-            boxShadow: "0 14px 30px -12px rgba(22,19,15,0.45)",
-          }}
-        >
-          <span style={{ fontSize: 20, fontWeight: 600 }}>got it in</span>
-          <span style={{ fontSize: 50, fontWeight: 800, letterSpacing: "-0.045em", lineHeight: 1 }}>1.1s</span>
         </div>
       </div>
     ),

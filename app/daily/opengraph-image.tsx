@@ -8,7 +8,8 @@ import { RACERS } from "@/lib/racers";
 import { dailyNumber } from "@/lib/daily";
 import { readPulse } from "@/lib/server/stats";
 import { GLYPH_PATH } from "@/lib/creatures";
-import { INK, OgCreature, ogFonts } from "@/lib/og";
+import { INK, ogFonts } from "@/lib/og";
+import { LAB_LOGO } from "@/lib/logos";
 
 export const alt = "Daily doodle: one word for everyone, seven AI models racing to guess it.";
 export const size = { width: 1200, height: 630 };
@@ -61,10 +62,22 @@ export default async function Image() {
             <path d="M40 80 C 44 30, 110 10, 150 30 C 200 56, 190 110, 150 132 C 118 150, 112 170, 114 200" />
             <path d="M114 262 L 115 264" strokeWidth="24" />
           </svg>
-          <div style={{ position: "absolute", bottom: -14, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 4 }}>
+          <div style={{ position: "absolute", bottom: 26, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 10 }}>
             {RACERS.map((r) => (
-              <div key={r.key} style={{ display: "flex", width: 64, justifyContent: "center" }}>
-                <OgCreature k={r.key} size={56} />
+              <div
+                key={r.key}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 50,
+                  height: 50,
+                  borderRadius: 14,
+                  background: LAB_LOGO[r.key].tile,
+                  boxShadow: LAB_LOGO[r.key].tile === "#ffffff" ? "inset 0 0 0 1.5px rgba(22,19,15,0.1)" : "none",
+                }}
+              >
+                <img src={LAB_LOGO[r.key].src} width={30} height={30} alt="" />
               </div>
             ))}
           </div>

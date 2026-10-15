@@ -25,7 +25,7 @@
 
 ## Cloning & running
 
-1. Clone the repo: `git clone https://github.com/Luffixos/doodle-derby`
+1. Clone the repo: `git clone https://github.com/Nutlope/doodle-derby`
 2. Create a `.env.local` file and add your [Together AI API key](https://api.together.ai/settings/api-keys): `TOGETHER_API_KEY=`
 3. Optionally add `KV_REST_API_URL` and `KV_REST_API_TOKEN` from [Upstash](https://upstash.com) for a shared leaderboard (without them it saves to `.data/` locally)
 4. Run `pnpm install` and `pnpm dev` to install dependencies and run locally
