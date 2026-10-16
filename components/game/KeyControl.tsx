@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { IconKey } from "@tabler/icons-react";
+import { IconArrowUpRight, IconKey } from "@tabler/icons-react";
 import { BRAND } from "@/lib/brand";
+import type { FreeLimit } from "@/lib/server/stats";
+import { TogetherMark } from "@/components/Brand";
 import { cn } from "@/lib/utils";
 import { DockItem } from "./Nav";
 
@@ -60,7 +62,12 @@ export function KeyControl({ className, inDock }: { className?: string; inDock?:
 
   useEffect(() => {
     // Only the copy on screen answers: the header and footer each hold one.
-    const show = () => root.current?.offsetParent !== null && setOpen(true);
+    const show = () => {
+      if (root.current?.offsetParent === null) return;
+      // On phones the form lives in the footer, out of sight below the field.
+      root.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+      setOpen(true);
+    };
     window.addEventListener(OPEN, show);
     return () => window.removeEventListener(OPEN, show);
   }, []);
@@ -154,5 +161,54 @@ export function KeyControl({ className, inDock }: { className?: string; inDock?:
         ) : null}
       </AnimatePresence>
     </div>
+  );
+}
+
+const FREE_COPY: Record<FreeLimit, { title: string; body: string }> = {
+  ip: {
+    title: "That's your free play for today",
+    body: "Add your own Together AI key to keep racing. A round costs about a cent, and the key stays in this browser.",
+  },
+  budget: {
+    title: "Free play is full for today",
+    body: "So many people drew today that the free pool ran dry. Add your own Together AI key to keep racing, or come back tomorrow.",
+  },
+};
+
+/** Shown over the field when the house key's free limit stops a race. */
+export function FreeLimitCard({ limit }: { limit: FreeLimit }) {
+  const copy = FREE_COPY[limit];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+      transition={{ type: "spring", stiffness: 480, damping: 34 }}
+      role="status"
+      className="sticker mb-3 p-4"
+    >
+      <div className="flex items-start gap-3">
+        <TogetherMark className="mt-0.5 h-6 w-auto shrink-0" />
+        <div className="min-w-0">
+          <p className="tx-name">{copy.title}</p>
+          <p className="tx-small mt-1 text-ink-2">{copy.body}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <button type="button" onClick={openKeyForm} className="pill pill-ink h-9">
+              <IconKey size={16} stroke={2} />
+              Add your key
+            </button>
+            <a
+              href={BRAND.keysUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tx-small inline-flex items-center gap-0.5 font-semibold underline decoration-ink-4 underline-offset-4 hover:decoration-ink"
+            >
+              Get a key
+              <IconArrowUpRight size={14} stroke={2.2} />
+            </a>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 }

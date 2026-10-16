@@ -39,7 +39,7 @@ export default async function Image() {
               <circle cx="25" cy="13.5" r="4.2" fill="#F2442E" />
               <circle cx="25" cy="13.5" r="1.6" fill={INK} />
             </svg>
-            doodle derby
+            open pictionary
           </div>
           <div style={{ display: "flex", flexDirection: "column", fontSize: 104, fontWeight: 800, lineHeight: 0.94, letterSpacing: "-0.055em", whiteSpace: "nowrap" }}>
             <span>Can AI</span>

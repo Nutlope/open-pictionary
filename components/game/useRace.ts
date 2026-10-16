@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { RACERS, RULES, type RacerKey } from "@/lib/racers";
 import type { Verdict } from "@/lib/judge";
 import type { GuessEvent } from "@/app/api/guess/route";
+import type { FreeLimit } from "@/lib/server/stats";
 import type { SketchpadHandle } from "./Sketchpad";
 import { recordRound, recordSolve } from "./session";
 import { sound } from "./sound";
@@ -24,13 +25,16 @@ export type LaneGuess = {
   at: number;
 };
 
+/** A lane's `out` while the free guesses are used up; a key brings it back. */
+export const PAUSED = "paused";
+
 export type Lane = {
   key: RacerKey;
   looking: boolean;
   guesses: LaneGuess[];
   solvedAt: number | null;
   won: boolean;
-  /** Set when the model is sitting out (errors, or a rejected key). */
+  /** Set when the model is sitting out (errors, a rejected key, or PAUSED). */
   out: string | null;
   /** A soft, temporary note: "took too long". */
   note: string | null;
@@ -113,6 +117,8 @@ export function useRace(opts: {
   const [winner, setWinner] = useState<RacerKey | null>(null);
   const [cost, setCost] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  /** Set when the house key's free limit stops the race. */
+  const [limit, setLimit] = useState<FreeLimit | null>(null);
   const [demo, setDemo] = useState(false);
   /** The result can no longer change: a win, a give-up, or the buzzer window has passed. */
   const [final, setFinal] = useState(false);
@@ -148,6 +154,20 @@ export function useRace(opts: {
   const publish = useCallback(() => {
     setLanes(L.current.map(({ ctrl, nextAt, lastInk, lastReplyAt, errors, ...pub }) => ({ ...pub, guesses: [...pub.guesses] })));
   }, []);
+
+  // A key added mid-round picks the race back up where the free guesses ran out.
+  useEffect(() => {
+    if (!opts.apiKey) return;
+    setLimit(null);
+    let woke = false;
+    for (const lane of L.current) {
+      if (lane.out !== PAUSED) continue;
+      lane.out = null;
+      lane.errors = 0;
+      woke = true;
+    }
+    if (woke) publish();
+  }, [opts.apiKey, publish]);
 
   const setPhaseBoth = (p: Phase) => {
     phaseRef.current = p;
@@ -195,6 +215,7 @@ export function useRace(opts: {
       setStartedAt(null);
       setEndedAt(null);
       setError(null);
+      setLimit(null);
       publish();
       sketch.current?.clear();
 
@@ -349,7 +370,10 @@ export function useRace(opts: {
               publish();
             } else if (e.type === "error") {
               lane.errors++;
-              if (e.fatal) {
+              if (e.limit) {
+                lane.out = PAUSED;
+                setLimit(e.limit);
+              } else if (e.fatal) {
                 lane.out = e.message;
                 if (/key/i.test(e.message) || res.status === 429) setError(e.message);
               } else {
@@ -431,6 +455,7 @@ export function useRace(opts: {
     endedAt,
     cost,
     error,
+    limit,
     demo,
     final,
     endReason: endReason.current,

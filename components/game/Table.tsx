@@ -1,4 +1,4 @@
-import { DerbyWordmark, Makers, TogetherCredit } from "@/components/Brand";
+import { Wordmark, Makers, TogetherBadge, TogetherCredit } from "@/components/Brand";
 
 /**
  * The table every screen sits at: a header and footer framed wide, and a
@@ -35,7 +35,10 @@ export function Table({
   return (
     <div className="relative isolate flex min-h-dvh flex-col">
       <header className="relative z-30 mx-auto flex w-full max-w-[1680px] items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-5 lg:px-8">
-        <DerbyWordmark />
+        <div className="flex min-w-0 items-center gap-4">
+          <Wordmark />
+          <TogetherBadge className="hidden md:inline-flex" />
+        </div>
         <nav className="flex items-center gap-2">{nav}</nav>
       </header>
 
@@ -50,8 +53,12 @@ export function Table({
 
       <footer className="mx-auto flex w-full max-w-[1680px] flex-wrap items-center justify-between gap-x-6 gap-y-4 px-4 pb-5 sm:px-6 lg:px-8">
         {footer ? <div className="w-full md:hidden">{footer}</div> : null}
+        {/* Phones have no room for the header badge, so it closes the page instead. */}
+        <div className="flex w-full justify-center md:hidden">
+          <TogetherBadge />
+        </div>
         <Makers />
-        <TogetherCredit />
+        <TogetherCredit className="max-md:hidden" />
       </footer>
       {children}
     </div>

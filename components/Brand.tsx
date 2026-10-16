@@ -2,10 +2,10 @@ import { BRAND } from "@/lib/brand";
 import { GLYPH_PATH } from "@/lib/creatures";
 
 /**
- * The Doodle Derby mark: a scribble loop that runs out to a finish dot, with
+ * The Open Pictionary mark: a scribble loop that runs out to a finish dot, with
  * the creature colors as a striped flag at the end of the line.
  */
-export function DerbyGlyph({ className = "size-8" }: { className?: string }) {
+export function BrandGlyph({ className = "size-8" }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" fill="none" aria-hidden className={className}>
       <path
@@ -21,12 +21,12 @@ export function DerbyGlyph({ className = "size-8" }: { className?: string }) {
   );
 }
 
-export function DerbyWordmark() {
+export function Wordmark() {
   return (
     <a href="/" aria-label={BRAND.name} className="group flex shrink-0 items-center gap-1.5 rounded-xl text-ink">
-      <DerbyGlyph className="size-8 transition-transform duration-500 ease-[var(--ease-spring)] group-hover:-rotate-12" />
+      <BrandGlyph className="size-8 transition-transform duration-500 ease-[var(--ease-spring)] group-hover:-rotate-12" />
       <span className="text-[1.25rem] leading-none font-extrabold tracking-[-0.04em] [font-variation-settings:'opsz'_48,'wdth'_85]">
-        doodle derby
+        open pictionary
       </span>
     </a>
   );
@@ -63,6 +63,24 @@ export function TogetherCredit({ className = "" }: { className?: string }) {
       <TogetherMark className="h-4 w-auto transition-transform duration-500 ease-[var(--ease-spring)] group-hover:rotate-[120deg]" />
       <span className="tx-small">
         on <span className="font-semibold">Together AI</span>
+      </span>
+    </a>
+  );
+}
+
+/** The header's credit: a frosted capsule like the dock, next to the wordmark. */
+export function TogetherBadge({ className = "" }: { className?: string }) {
+  return (
+    <a
+      href={BRAND.togetherUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Powered by Together AI"
+      className={`dock group h-[42px] shrink-0 gap-2 px-3.5 text-[0.875rem] whitespace-nowrap text-ink transition-transform active:scale-95 ${className}`}
+    >
+      <TogetherMark className="h-[18px] w-auto transition-transform duration-500 ease-[var(--ease-spring)] group-hover:rotate-[120deg]" />
+      <span>
+        <span className="text-ink-2">Powered by</span> <span className="font-semibold">Together AI</span>
       </span>
     </a>
   );

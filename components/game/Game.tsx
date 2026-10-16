@@ -16,7 +16,7 @@ import { Creature } from "./Creature";
 import { Clock } from "./Clock";
 import { Burst } from "./Burst";
 import type { Tab } from "./Board";
-import { KeyControl, openKeyForm, useTogetherKey } from "./KeyControl";
+import { FreeLimitCard, KeyControl, openKeyForm, useTogetherKey } from "./KeyControl";
 import { onSession, readSession } from "./session";
 import type { ShareTarget } from "./ShareSheet";
 import type { CardTarget } from "./ModelCard";
@@ -371,7 +371,7 @@ export function Game({
       clip,
       text: (url) => resultText({ daily: isDaily ? d : null, ms: winMs, order: src.order, called: src.called, streak, url }),
       link,
-      file: `doodle-derby-${isDaily ? `daily-${d}` : deal.word.replace(/\s+/g, "-")}`,
+      file: `open-pictionary-${isDaily ? `daily-${d}` : deal.word.replace(/\s+/g, "-")}`,
       spoiler: isDaily,
     });
   }, [deal, done, race.startedAt, race.lanes, outcome, winner, winMs, isDaily, d, me, apiKey]);
@@ -606,6 +606,7 @@ export function Game({
         fieldHead={<FieldHead today={live?.today ?? null} />}
         field={
           <>
+            <AnimatePresence>{race.limit ? <FreeLimitCard key="limit" limit={race.limit} /> : null}</AnimatePresence>
             <AnimatePresence>
               {race.error || (race.demo && !done) ? (
                 <motion.div

@@ -3,7 +3,7 @@
  * component ever hardcodes a URL.
  */
 export const BRAND = {
-  name: "Doodle Derby",
+  name: "Open Pictionary",
   tagline: "You draw. Seven open models race to guess it.",
   company: "Together AI",
 

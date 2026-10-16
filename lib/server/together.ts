@@ -9,7 +9,7 @@ import { cleanGuess, quickJudge, type Verdict } from "@/lib/judge";
  * stream is broken (see Racer.stream) gets one plain request instead.
  */
 const CHAT_URL = "https://api.together.xyz/v1/chat/completions";
-const UA = "DoodleDerby/1.0";
+const UA = "OpenPictionary/1.0";
 
 export function houseKey() {
   return process.env.TOGETHER_API_KEY?.trim() || "";

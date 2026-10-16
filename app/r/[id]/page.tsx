@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getShare } from "@/lib/server/share";
@@ -13,12 +14,12 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const doc = await getShare(id);
-  if (!doc) return { title: "doodle derby" };
+  if (!doc) return { title: BRAND.name };
   const w = doc.winner ? RACER_BY_KEY[doc.winner] : null;
   const title = w && doc.winMs != null ? `${w.label} guessed my doodle in ${fmtSec(doc.winMs)}. Can you beat it?` : "Seven AIs couldn't guess my doodle. Can you?";
   const description = "Watch the doodle draw itself and type your guess before seven AI models get it. Then draw your own.";
   return {
-    title: `${title} · doodle derby`,
+    title: `${title} · ${BRAND.name}`,
     description,
     openGraph: { title, description, type: "website" },
     twitter: { card: "summary_large_image", title, description },

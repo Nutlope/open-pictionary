@@ -1,6 +1,6 @@
-<a href="https://doodle-derby-eight.vercel.app">
-  <img alt="Doodle Derby" src="./docs/img/og.png">
-  <h1 align="center">Doodle Derby</h1>
+<a href="https://openpictionary.com">
+  <img alt="Open Pictionary" src="./docs/img/og.png">
+  <h1 align="center">Open Pictionary</h1>
 </a>
 
 <p align="center">

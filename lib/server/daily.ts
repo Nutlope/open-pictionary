@@ -27,6 +27,7 @@ let order: Word[] | null = null;
 function schedule(): Word[] {
   if (order) return order;
   const pool = WORDS.filter((w) => w.level < 3);
+  // Still the old name: changing the seed would reshuffle every daily word.
   const seed = createHash("sha256").update(`daily:${process.env.DAILY_SEED || "doodle-derby-v1"}`).digest();
   let a = seed.readUInt32LE(0);
   // mulberry32: small, fast, and identical on every server.

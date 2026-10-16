@@ -7,7 +7,7 @@ import { RACER_BY_KEY, type RacerKey } from "@/lib/racers";
 import { say, type Moment } from "@/lib/voices";
 import { cn } from "@/lib/utils";
 import { Creature, type Mood, type Pulse } from "./Creature";
-import type { Lane, LaneGuess, Phase } from "./useRace";
+import { PAUSED, type Lane, type LaneGuess, type Phase } from "./useRace";
 
 const fmt = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 const spring = { type: "spring", stiffness: 520, damping: 34, mass: 0.7 } as const;
@@ -314,7 +314,7 @@ export function LaneRow({
                 <Thinking key="think" color={racer.color} />
               ) : lane.out ? (
                 <span key="out" className="tx-label text-ink-3">
-                  offline
+                  {lane.out === PAUSED ? "paused" : "offline"}
                 </span>
               ) : lane.note && !compact ? (
                 <span key="note" className="tx-label text-ink-3">

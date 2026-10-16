@@ -76,7 +76,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
               <circle cx="25" cy="13.5" r="4.2" fill="#F2442E" />
               <circle cx="25" cy="13.5" r="1.6" fill={INK} />
             </svg>
-            doodle derby
+            open pictionary
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>

@@ -186,7 +186,7 @@ export function StarButton() {
       href={BRAND.repoUrl}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`Doodle Derby on GitHub${stars != null ? `, ${stars} stars` : ""}`}
+      aria-label={`${BRAND.name} on GitHub${stars != null ? `, ${stars} stars` : ""}`}
       className="dock group h-[42px] shrink-0 gap-0 px-3 sm:px-3.5 text-[0.875rem] font-semibold text-ink transition-transform active:scale-95"
     >
       <IconBrandGithub size={18} stroke={2} />

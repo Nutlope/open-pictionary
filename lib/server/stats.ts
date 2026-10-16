@@ -129,23 +129,25 @@ export type Pulse = Awaited<ReturnType<typeof readPulse>>;
    Guard rails for the house key. A visitor's own key skips all of this.
    ------------------------------------------------------------------ */
 
-/** Guesses per IP per hour on the house key. A full round is about 50. */
-const IP_HOURLY = Number(process.env.FREE_GUESSES_PER_HOUR || 900);
+/** Model calls per IP per day on the house key. A full round is about 50. */
+const IP_DAILY = Number(process.env.FREE_GUESSES_PER_DAY || 250);
 /** Daily spend ceiling on the house key, in dollars. */
-const DAILY_BUDGET = Number(process.env.DAILY_BUDGET_USD || 40);
+const DAILY_BUDGET = Number(process.env.DAILY_BUDGET_USD || 400);
 
-export async function houseAllowance(ip: string): Promise<{ ok: true } | { ok: false; reason: string }> {
-  const hour = Math.floor(Date.now() / 3_600_000);
+/** Which free limit ran out: this visitor's day, or everyone's budget. */
+export type FreeLimit = "ip" | "budget";
+
+export async function houseAllowance(ip: string): Promise<{ ok: true } | { ok: false; reason: string; limit: FreeLimit }> {
   // Both reads in parallel: this sits in front of every model call.
   const [[count], spent] = await Promise.all([
-    store.bump([{ key: `rl:${ip}:${hour}`, by: 1, ttlSec: 3700 }]),
+    store.bump([{ key: `rl:${ip}:${today()}`, by: 1, ttlSec: 2 * 86400 }]),
     store.get(`spend:${today()}`),
   ]);
-  if (count > IP_HOURLY) {
-    return { ok: false, reason: "You have used this hour's free guesses. Add your Together key to keep racing." };
+  if (count > IP_DAILY) {
+    return { ok: false, limit: "ip", reason: "You have used today's free guesses. Add your Together key to keep racing." };
   }
   if (spent > DAILY_BUDGET) {
-    return { ok: false, reason: "Free play is full for today. Add your Together key to keep racing." };
+    return { ok: false, limit: "budget", reason: "Free play is full for today. Add your Together key to keep racing." };
   }
   return { ok: true };
 }

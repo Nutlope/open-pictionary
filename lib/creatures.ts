@@ -45,6 +45,6 @@ export const BODIES: Record<Shape, Body> = {
   hex: { eyeY: 34, gap: 10, prims: [{ d: hexPath() }], round: 10 },
 };
 
-/** The doodle derby mark: a scribble loop running out to a finish dot. */
+/** The Open Pictionary mark: a scribble loop running out to a finish dot. */
 export const GLYPH_PATH = "M3.5 22c2.6-.2 4.6-2 5.6-4.6 1-2.7.2-5.6-2-5.6s-2.6 3.3-.6 5.6c2.6 3 7.2 3 9.8.4 1.6-1.6 2.2-3.8 4-4.6";
 export const CROWN_PATH = "M3 19 L1.5 5 L9.5 11 L16 2 L22.5 11 L30.5 5 L29 19 Z";

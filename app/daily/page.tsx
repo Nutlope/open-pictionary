@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 import type { Metadata } from "next";
 import { Game } from "@/components/game/Game";
 import { dailyNumber } from "@/lib/daily";
@@ -13,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = `Daily doodle #${d}`;
   const description = "One word for everyone today. Draw it, and seven AI models race to guess yours. Fastest doodles top the board.";
   return {
-    title: `${title} · doodle derby`,
+    title: `${title} · ${BRAND.name}`,
     description,
     openGraph: { title, description, type: "website" },
     twitter: { card: "summary_large_image", title, description },

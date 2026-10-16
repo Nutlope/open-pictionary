@@ -1,6 +1,6 @@
 import { readRound } from "@/lib/server/round";
 import { askRacer, houseKey, judge, type GuessHistory } from "@/lib/server/together";
-import { houseAllowance, notePlayed, noteSolved, noteSpend, noteWrong } from "@/lib/server/stats";
+import { houseAllowance, notePlayed, noteSolved, noteSpend, noteWrong, type FreeLimit } from "@/lib/server/stats";
 import { logGuess } from "@/lib/server/share";
 import { RACER_BY_KEY, isRacerKey, type RacerKey } from "@/lib/racers";
 import { findWord, WORDS } from "@/lib/words";
@@ -20,7 +20,7 @@ export const maxDuration = 30;
 export type GuessEvent =
   | { type: "guess"; guess: string; latencyMs: number; costUsd: number; mode: "live" | "demo" }
   | { type: "verdict"; verdict: Verdict; won: boolean; costUsd: number }
-  | { type: "error"; message: string; fatal: boolean };
+  | { type: "error"; message: string; fatal: boolean; limit?: FreeLimit };
 
 type Body = {
   round?: unknown;
@@ -37,8 +37,8 @@ function line(e: GuessEvent) {
   return JSON.stringify(e) + "\n";
 }
 
-function errorResponse(message: string, status: number, fatal = true) {
-  return new Response(line({ type: "error", message, fatal }), {
+function errorResponse(message: string, status: number, fatal = true, limit?: FreeLimit) {
+  return new Response(line({ type: "error", message, fatal, limit }), {
     status,
     headers: { "Content-Type": "application/x-ndjson" },
   });
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
   if (apiKey && !userKey) {
     const allow = await houseAllowance(ip).catch(() => ({ ok: true }) as const);
-    if (!allow.ok) return errorResponse(allow.reason, 429);
+    if (!allow.ok) return errorResponse(allow.reason, 429, true, allow.limit);
   }
 
   // Bookkeeping starts once the verdict is out, and the stream stays open

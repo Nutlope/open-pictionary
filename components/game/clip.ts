@@ -258,7 +258,7 @@ export function drawClip(ctx: CanvasRenderingContext2D, doc: ClipDoc, v: number,
   ctx.restore();
   ctx.fillStyle = INK;
   ctx.font = font(cache, 800, 50);
-  ctx.fillText("doodle derby", 150, 126);
+  ctx.fillText("open pictionary", 150, 126);
   if (doc.daily) {
     ctx.font = font(cache, 700, 36);
     const label = `daily #${doc.daily}`;
