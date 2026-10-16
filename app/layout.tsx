@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { bricolage } from "@/lib/fonts";
 import { BRAND } from "@/lib/brand";
 import "./globals.css";
@@ -26,7 +27,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={bricolage.variable}>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Plausible: cookieless page views, from the production site only, so previews and local runs never count. */}
+        {process.env.VERCEL_ENV === "production" && <Script defer data-domain="openpictionary.com" src="https://plausible.io/js/script.js" strategy="afterInteractive" />}
+      </body>
     </html>
   );
 }
