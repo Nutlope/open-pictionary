@@ -4,7 +4,7 @@
  */
 export const BRAND = {
   name: "Doodle Derby",
-  tagline: "You draw. Seven open models race to guess it.",
+  tagline: "You draw. Eight open models race to guess it.",
   company: "Together AI",
 
   repo: "Nutlope/doodle-derby",

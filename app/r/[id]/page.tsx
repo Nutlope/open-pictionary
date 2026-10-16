@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const doc = await getShare(id);
   if (!doc) return { title: "doodle derby" };
   const w = doc.winner ? RACER_BY_KEY[doc.winner] : null;
-  const title = w && doc.winMs != null ? `${w.label} guessed my doodle in ${fmtSec(doc.winMs)}. Can you beat it?` : "Seven AIs couldn't guess my doodle. Can you?";
-  const description = "Watch the doodle draw itself and type your guess before seven AI models get it. Then draw your own.";
+  const title = w && doc.winMs != null ? `${w.label} guessed my doodle in ${fmtSec(doc.winMs)}. Can you beat it?` : "Eight AIs couldn't guess my doodle. Can you?";
+  const description = "Watch the doodle draw itself and type your guess before eight AI models get it. Then draw your own.";
   return {
     title: `${title} · doodle derby`,
     description,

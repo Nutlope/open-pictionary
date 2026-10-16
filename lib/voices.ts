@@ -101,6 +101,19 @@ export const VOICES: Record<RacerKey, Voice> = {
       doze: ["zzz"],
     },
   },
+  "muse-spark": {
+    vibe: "the big sibling",
+    bio: "Meta's big open Muse. Glimmer daydreams; Spark just blurts it out.",
+    lines: {
+      win: ["spark!", "easy", "called it"],
+      also: ["obviously", "me too"],
+      wrong: ["oops", "rethinking"],
+      close: ["hot!", "nearly"],
+      lose: ["rematch", "fine"],
+      stumped: ["abstract?"],
+      doze: ["zzz"],
+    },
+  },
 };
 
 export function say(k: RacerKey, m: Moment): string {

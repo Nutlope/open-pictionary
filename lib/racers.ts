@@ -1,6 +1,7 @@
 /**
- * The racers. One open vision model per lab, so the race is between genuinely
- * different model families rather than seven sizes of the same one.
+ * The racers. Open vision models from seven labs, so the race is between
+ * genuinely different model families rather than eight sizes of the same one.
+ * Meta fields two: the small Glimmer and the big Spark.
  *
  * Verified live on 2026-10-09 against GET /v1/models plus a real image call per
  * model. Notes from those runs, so nobody re-learns them:
@@ -13,7 +14,15 @@
  *   a no-reasoning answer, tested on an ambiguous sketch, not an easy one.
  * - Nemotron 3.5 Super VL (added 2026-10-15, the day it landed) sees sketches
  *   and answers in about half a second with enable_thinking off.
- * - Muse Glimmer has no off switch. It always reasons a little first (about
+ * - Muse Spark Open (added 2026-10-15) sees sketches and answers in about a
+ *   third of a second with reasoning off; any of reasoning.enabled,
+ *   enable_thinking or thinking.type stops it. Left on, it thinks for 100+
+ *   tokens first. reasoning_effort "none" makes it return nothing at all.
+ *   Its stream drops the last token of a one-word answer ("ghos" for ghost,
+ *   "rocke" for rocket) while usage still counts it, so it is asked without
+ *   streaming; the reply is a few tokens, so that costs no time.
+ * - Muse Glimmer has no off switch (re-checked 2026-10-15: enabled false,
+ *   enable_thinking, thinking.type and effort none or minimal all still think). It always reasons a little first (about
  *   50 to 90 tokens at low effort), so its cap leaves room for that.
  * - Qwen3.8 Flash rejects reasoning_effort alongside enable_thinking: false.
  * - gpt-oss-120b accepts image input but cannot see it (it answers "unknown"
@@ -33,9 +42,10 @@ export type RacerKey =
   | "minimax-m3"
   | "deepseek-v4-1-flash"
   | "muse-glimmer"
-  | "nemotron-3-5-super";
+  | "nemotron-3-5-super"
+  | "muse-spark";
 
-export type Shape = "circle" | "square" | "triangle" | "pill" | "drop" | "flower" | "star";
+export type Shape = "circle" | "square" | "triangle" | "pill" | "drop" | "flower" | "star" | "hex";
 
 export type Racer = {
   key: RacerKey;
@@ -56,6 +66,8 @@ export type Racer = {
   params: Record<string, unknown>;
   /** Room for the guess plus whatever reasoning the model insists on. */
   maxTokens: number;
+  /** false asks for the whole reply at once, for a model whose stream drops tokens. */
+  stream?: boolean;
 };
 
 export const RACERS: Racer[] = [
@@ -142,7 +154,7 @@ export const RACERS: Racer[] = [
     key: "muse-glimmer",
     id: "meta-models/Muse-Glimmer-30B",
     label: "Muse Glimmer",
-    short: "Muse",
+    short: "Glimmer",
     color: "#FFA800",
     heart: "💛",
     shape: "flower",
@@ -167,6 +179,22 @@ export const RACERS: Racer[] = [
     outPerM: 0.5,
     params: { chat_template_kwargs: { enable_thinking: false } },
     maxTokens: 24,
+  },
+  {
+    key: "muse-spark",
+    id: "meta-models/Muse-Spark-Open-816B-A42B",
+    label: "Muse Spark",
+    short: "Spark",
+    color: "#FF7A1A",
+    heart: "🧡",
+    shape: "hex",
+    room: "#FFBE85",
+    lab: "Meta",
+    inPerM: 1.25,
+    outPerM: 4.25,
+    params: { reasoning: { enabled: false } },
+    maxTokens: 24,
+    stream: false,
   },
 ];
 

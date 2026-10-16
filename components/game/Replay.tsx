@@ -23,7 +23,7 @@ const spring = { type: "spring", stiffness: 480, damping: 34 } as const;
 
 type YourGuess = { id: number; text: string; verdict: Verdict | "pending"; at: number };
 
-/** The viewer's own lane: an ink pencil racing the six. */
+/** The viewer's own lane: an ink pencil racing the eight. */
 function YouRow({ guesses, solvedAt, open }: { guesses: YourGuess[]; solvedAt: number | null; open: boolean }) {
   const controls = useAnimationControls();
   const latest = guesses.at(-1);
@@ -249,8 +249,8 @@ export function Replay({ doc, also }: { doc: ReplayDoc; also: string[] }) {
   const brag = async () => {
     const text =
       aiAt == null
-        ? `I guessed a doodle that stumped seven AI models, in ${fmtSec(youAt!)}. Can you?`
-        : `I guessed this doodle ${fmtSec(aiAt - youAt!)} faster than seven AI models. Can you?`;
+        ? `I guessed a doodle that stumped eight AI models, in ${fmtSec(youAt!)}. Can you?`
+        : `I guessed this doodle ${fmtSec(aiAt - youAt!)} faster than eight AI models. Can you?`;
     if ("share" in navigator && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
       try {
         await navigator.share({ text, url: location.href });
@@ -265,7 +265,7 @@ export function Replay({ doc, also }: { doc: ReplayDoc; also: string[] }) {
   const label = youAt != null ? "You got it" : revealed ? (winner ? `${winner.short} got it first` : "Nobody got it") : "Can you guess it first?";
   const title = youWon
     ? aiAt == null
-      ? "You got what six AIs couldn't"
+      ? "You got what eight AIs couldn't"
       : `You beat the AIs by ${fmtSec(aiAt - youAt!)}`
     : winner
       ? `Your turn. Beat ${fmtSec(doc.winMs ?? 0)}`
@@ -446,7 +446,7 @@ export function Replay({ doc, also }: { doc: ReplayDoc; also: string[] }) {
             )}
           </AnimatePresence>
         }
-        fieldHead={<FieldHead today={null} note={mine.length ? "you vs seven open models" : "replaying live"} />}
+        fieldHead={<FieldHead today={null} note={mine.length ? "you vs eight open models" : "replaying live"} />}
         field={
           <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-col">
             {mine.length || open ? <YouRow guesses={mine} solvedAt={youAt} open={open} /> : null}

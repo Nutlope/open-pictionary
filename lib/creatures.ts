@@ -1,7 +1,7 @@
 import type { Shape } from "./racers";
 
 /**
- * The creatures' bodies, as plain geometry in a 64x64 box, so the same seven
+ * The creatures' bodies, as plain geometry in a 64x64 box, so the same eight
  * shapes render as SVG on the page, in the Satori cards, and on the canvas
  * the video clip is drawn on.
  */
@@ -24,6 +24,16 @@ function starPath() {
   return `M${pts.join(" L")} Z`;
 }
 
+/** A flat-topped hexagon; `round` takes the points off. */
+function hexPath() {
+  const pts: string[] = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (i * Math.PI) / 3;
+    pts.push(`${(32 + Math.cos(a) * 25).toFixed(1)} ${(33 + Math.sin(a) * 23).toFixed(1)}`);
+  }
+  return `M${pts.join(" L")} Z`;
+}
+
 export const BODIES: Record<Shape, Body> = {
   circle: { eyeY: 33, gap: 10, prims: [{ c: [32, 33, 27] }] },
   square: { eyeY: 33, gap: 10, prims: [{ r: [6, 7, 52, 52, 15] }] },
@@ -32,6 +42,7 @@ export const BODIES: Record<Shape, Body> = {
   drop: { eyeY: 40, gap: 9.5, prims: [{ d: "M32 3 C 40 14, 57 28, 57 40 A 25 22 0 0 1 7 40 C 7 28, 24 14, 32 3 Z" }] },
   flower: { eyeY: 33, gap: 9.5, prims: [...petals, { c: [32, 33, 19] }] },
   star: { eyeY: 36, gap: 9, prims: [{ d: starPath() }], round: 8 },
+  hex: { eyeY: 34, gap: 10, prims: [{ d: hexPath() }], round: 10 },
 };
 
 /** The doodle derby mark: a scribble loop running out to a finish dot. */

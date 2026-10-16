@@ -4,12 +4,12 @@
 </a>
 
 <p align="center">
-  Draw a word and watch seven open vision models race to guess it live. Powered by Together AI.
+  Draw a word and watch eight open vision models race to guess it live. Powered by Together AI.
 </p>
 
 ## Tech stack
 
-- [Together AI](https://www.together.ai) for inference, with seven vision models from seven labs: Kimi K3, Qwen3.8 Flash, GLM-5.3 Flash, MiniMax M3, DeepSeek V4.1 Flash, Muse Glimmer and Nemotron 3.5 Super
+- [Together AI](https://www.together.ai) for inference, with eight vision models from seven labs: Kimi K3, Qwen3.8 Flash, GLM-5.3 Flash, MiniMax M3, DeepSeek V4.1 Flash, Muse Spark, Muse Glimmer and Nemotron 3.5 Super
 - GLM-5.3 Flash as the referee for guesses the synonym list can't settle
 - [Upstash Redis](https://upstash.com) for the global leaderboard, the daily board and share links
 - Next.js app router with Tailwind and Motion
@@ -19,7 +19,7 @@
 ## How it works
 
 1. You draw on a canvas. Every bit of new ink, each model gets a small snapshot of the sketch.
-2. All seven models stream their guesses at once, with thinking switched off so they answer in about a second.
+2. All eight models stream their guesses at once, with thinking switched off so they answer in about a second.
 3. Each guess is judged on the server, and the first correct one wins the round.
 4. Every result goes to a global leaderboard, and a daily word lets everyone compete on the same drawing.
 

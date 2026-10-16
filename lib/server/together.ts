@@ -3,9 +3,10 @@ import { RULES, costFor, type Racer } from "@/lib/racers";
 import { cleanGuess, quickJudge, type Verdict } from "@/lib/judge";
 
 /**
- * The Together client, raw fetch over the OpenAI-compatible SSE wire. Every
- * call streams: some Qwen endpoints refuse anything else, and streaming lets
- * us stop reading the moment the guess line is complete.
+ * The Together client, raw fetch over the OpenAI-compatible SSE wire. Calls
+ * stream by default: some Qwen endpoints refuse anything else, and streaming
+ * lets us stop reading the moment the guess line is complete. A racer whose
+ * stream is broken (see Racer.stream) gets one plain request instead.
  */
 const CHAT_URL = "https://api.together.xyz/v1/chat/completions";
 const UA = "DoodleDerby/1.0";
@@ -86,6 +87,27 @@ export async function streamChat(
   return { content, promptTokens: pt, completionTokens: ct || Math.ceil((content.length + reasoningChars) / 4) };
 }
 
+/** One plain, non-streaming request. Guesses are a few tokens, so it costs no speed. */
+async function chatOnce(apiKey: string, body: Record<string, unknown>, signal: AbortSignal): Promise<StreamResult> {
+  const res = await fetch(CHAT_URL, {
+    method: "POST",
+    signal,
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}`, "User-Agent": UA },
+    body: JSON.stringify({ ...body, stream: false }),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(errorText(res.status, text));
+  const j = JSON.parse(text) as {
+    choices?: { message?: { content?: string | null } }[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
+  };
+  return {
+    content: j.choices?.[0]?.message?.content ?? "",
+    promptTokens: j.usage?.prompt_tokens ?? 0,
+    completionTokens: j.usage?.completion_tokens ?? 0,
+  };
+}
+
 const GUESS_SYSTEM = [
   "You are playing Pictionary against other AI models, and the fastest correct guess wins.",
   "A person is drawing right now, so the sketch may be unfinished.",
@@ -143,14 +165,17 @@ export async function askRacer(opts: {
   // used to cost a model the whole round. If the first call is still silent
   // after hedgeMs, a twin goes out; whichever answers first wins and the other
   // is cancelled. The common case costs nothing extra.
-  const attempt = (ctrl: AbortController) =>
-    streamChat(apiKey, body, AbortSignal.any([signal, timeout, ctrl.signal]), (c) => c.includes("\n") && c.trim().length > 0).then(
+  const attempt = (ctrl: AbortController) => {
+    const sig = AbortSignal.any([signal, timeout, ctrl.signal]);
+    const call = racer.stream === false ? chatOnce(apiKey, body, sig) : streamChat(apiKey, body, sig, (c) => c.includes("\n") && c.trim().length > 0);
+    return call.then(
       (r) => {
         const guess = cleanGuess(r.content);
         if (!guess) throw new Error("No guess in the reply");
         return { ...r, guess };
       },
     );
+  };
   const first = new AbortController();
   const second = new AbortController();
   let hedged = false;

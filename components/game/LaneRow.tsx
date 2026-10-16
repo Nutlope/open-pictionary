@@ -236,7 +236,7 @@ export function LaneRow({
         aria-label={`${racer.label}: open its card`}
         className={cn(
           "lane-card relative block w-full rounded-[20px] text-left transition-[background-color,box-shadow,transform] duration-500 ease-[var(--ease-out)] disabled:cursor-default",
-          compact ? "px-2.5 py-2" : "px-3.5 py-3",
+          compact ? "px-2.5 py-2" : "px-3.5 py-2.5",
         )}
         style={{
           background: solved ? racer.room : "var(--card)",
