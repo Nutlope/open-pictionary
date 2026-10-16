@@ -360,7 +360,7 @@ export function Board({
     today: { title: `Daily doodle #${d}`, sub: "Everyone draws the same word. Fastest guessed doodles on top.", wash: "#FFD84A" },
     models: {
       title: "Who reads doodles best",
-      sub: "Eight open models, ranked by how often they guess first. Tap one for its card.",
+      sub: "Seven open models, ranked by how often they guess first. Tap one for its card.",
       wash: leader && leader.wins > 0 ? RACER_BY_KEY[leader.key].room : "var(--card-2)",
     },
     you: { title: me?.name ?? "You", sub: "Your streaks and bests, kept in this browser.", wash: "#BBA8FF" },

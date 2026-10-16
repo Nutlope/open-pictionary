@@ -138,7 +138,6 @@ const DEMO_PACE: Record<RacerKey, number> = {
   "glm-5-3-flash": 700,
   "minimax-m3": 1000,
   "deepseek-v4-1-flash": 700,
-  "muse-glimmer": 1300,
   "nemotron-3-5-super": 750,
   "muse-spark": 650,
 };

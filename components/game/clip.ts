@@ -5,7 +5,7 @@ import type { ReplayGuess } from "@/lib/replay";
 
 /**
  * The vertical clip: a round retold in a few seconds for Stories, Reels and
- * TikTok. The word hides as blanks, the doodle draws itself, the eight
+ * TikTok. The word hides as blanks, the doodle draws itself, the seven
  * creatures blurt their guesses in bubbles, and the winner's color floods
  * the room when one gets it. Drawn frame by frame on a 1080x1920 canvas, so
  * the same function feeds the live preview and the video encoder.
@@ -35,9 +35,9 @@ const MAX_DRAW = 4.4;
 
 const PAPER = { x: 90, y: 490, s: 900, r: 72 };
 const ROW_Y = 1676;
-const CREATURE = 104;
-/** Eight creatures across the frame, centered. */
-const colX = (i: number) => CLIP_W / 2 + (i - (RACERS.length - 1) / 2) * 120;
+const CREATURE = 116;
+/** Seven creatures across the frame, centered. */
+const colX = (i: number) => CLIP_W / 2 + (i - (RACERS.length - 1) / 2) * 134;
 
 export type Timeline = { speed: number; drawEnd: number; total: number; winAt: number | null; T: number };
 

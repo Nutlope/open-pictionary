@@ -1,7 +1,7 @@
 import type { Shape } from "./racers";
 
 /**
- * The creatures' bodies, as plain geometry in a 64x64 box, so the same eight
+ * The creatures' bodies, as plain geometry in a 64x64 box, so the same seven
  * shapes render as SVG on the page, in the Satori cards, and on the canvas
  * the video clip is drawn on.
  */

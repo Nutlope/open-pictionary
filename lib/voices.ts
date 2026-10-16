@@ -75,19 +75,6 @@ export const VOICES: Record<RacerKey, Voice> = {
       doze: ["zzz"],
     },
   },
-  "muse-glimmer": {
-    vibe: "the dreamer",
-    bio: "Meta's Muse. Always daydreams a little before it answers.",
-    lines: {
-      win: ["inspired", "i saw it", "magic"],
-      also: ["felt it", "same vibe"],
-      wrong: ["or not", "hmm…"],
-      close: ["warm…", "so near"],
-      lose: ["sigh", "next time"],
-      stumped: ["pure art", "a mood"],
-      doze: ["zzz"],
-    },
-  },
   "nemotron-3-5-super": {
     vibe: "the new kid",
     bio: "NVIDIA's newest vision model, on the field the day it shipped.",
@@ -102,8 +89,8 @@ export const VOICES: Record<RacerKey, Voice> = {
     },
   },
   "muse-spark": {
-    vibe: "the big sibling",
-    bio: "Meta's big open Muse. Glimmer daydreams; Spark just blurts it out.",
+    vibe: "the blurter",
+    bio: "Meta's big open Muse. Doesn't think, just blurts it out.",
     lines: {
       win: ["spark!", "easy", "called it"],
       also: ["obviously", "me too"],

@@ -11,7 +11,7 @@ import { GLYPH_PATH } from "@/lib/creatures";
 import { INK, ogFonts } from "@/lib/og";
 import { LAB_LOGO } from "@/lib/logos";
 
-export const alt = "Daily doodle: one word for everyone, eight AI models racing to guess it.";
+export const alt = "Daily doodle: one word for everyone, seven AI models racing to guess it.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const dynamic = "force-dynamic";
@@ -37,7 +37,7 @@ export default async function Image() {
             <span style={{ fontSize: 190, fontWeight: 800, lineHeight: 0.86, letterSpacing: "-0.06em" }}>#{d}</span>
           </div>
           <div style={{ display: "flex", fontSize: 28, fontWeight: 600, opacity: 0.66, letterSpacing: "-0.02em" }}>
-            {players > 0 ? `${players.toLocaleString("en-US")} drew it so far. Your turn.` : "One word for everyone. Eight AIs guess."}
+            {players > 0 ? `${players.toLocaleString("en-US")} drew it so far. Your turn.` : "One word for everyone. Seven AIs guess."}
           </div>
         </div>
 

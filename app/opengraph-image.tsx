@@ -1,6 +1,6 @@
 /**
  * The link card for the game itself. One question on the left; on the right,
- * a round as it ends: the doodle, and the eight models by their lab logos,
+ * a round as it ends: the doodle, and the seven models by their lab logos,
  * the ones that got it with their times and the rest with their misses.
  */
 import { ImageResponse } from "next/og";
@@ -10,7 +10,7 @@ import { LAB_LOGO } from "@/lib/logos";
 import { INK, ogFonts } from "@/lib/og";
 import { GLYPH_PATH } from "@/lib/creatures";
 
-export const alt = `${BRAND.name}: can AI guess your doodle? Eight open models race to find out.`;
+export const alt = `${BRAND.name}: can AI guess your doodle? Seven open models race to find out.`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -22,7 +22,6 @@ const ROUND: Record<RacerKey, { g: string; ms?: number }> = {
   "qwen3-8-flash": { g: "fox" },
   "glm-5-3-flash": { g: "owl" },
   "minimax-m3": { g: "bunny" },
-  "muse-glimmer": { g: "tiger" },
   "muse-spark": { g: "lynx" },
 };
 const ORDER = [...RACERS].sort((a, b) => (ROUND[a.key].ms ?? 99) - (ROUND[b.key].ms ?? 99));
@@ -66,8 +65,8 @@ export default async function Image() {
             transform: "rotate(2deg)",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "center", height: 160 }}>
-            <svg width="178" height="160" viewBox="80 80 360 320" fill="none" stroke={INK} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round">
+          <div style={{ display: "flex", justifyContent: "center", height: 196 }}>
+            <svg width="210" height="188" viewBox="80 80 360 320" fill="none" stroke={INK} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round">
               <path d="M146 214 Q 130 300 170 350 Q 260 420 350 350 Q 392 300 372 214" />
               <path d="M146 214 L 168 100 L 236 160 Q 260 152 286 160 L 352 100 L 372 214" />
               <circle cx="212" cy="252" r="11" fill={INK} />
@@ -76,7 +75,7 @@ export default async function Image() {
               <path d="M236 326 Q 247 340 259 326 Q 271 340 282 326" strokeWidth="7" />
             </svg>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 6 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 6 }}>
             {ORDER.map((r, i) => {
               const x = ROUND[r.key];
               const logo = LAB_LOGO[r.key];
@@ -87,7 +86,7 @@ export default async function Image() {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    height: 40,
+                    height: 44,
                     padding: "0 12px 0 6px",
                     borderRadius: 14,
                     background: won ? "#FFF3B8" : "transparent",

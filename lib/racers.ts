@@ -1,7 +1,6 @@
 /**
- * The racers. Open vision models from seven labs, so the race is between
- * genuinely different model families rather than eight sizes of the same one.
- * Meta fields two: the small Glimmer and the big Spark.
+ * The racers. One open vision model per lab, so the race is between genuinely
+ * different model families rather than seven sizes of the same one.
  *
  * Verified live on 2026-10-09 against GET /v1/models plus a real image call per
  * model. Notes from those runs, so nobody re-learns them:
@@ -21,9 +20,9 @@
  *   Its stream drops the last token of a one-word answer ("ghos" for ghost,
  *   "rocke" for rocket) while usage still counts it, so it is asked without
  *   streaming; the reply is a few tokens, so that costs no time.
- * - Muse Glimmer has no off switch (re-checked 2026-10-15: enabled false,
- *   enable_thinking, thinking.type and effort none or minimal all still think). It always reasons a little first (about
- *   50 to 90 tokens at low effort), so its cap leaves room for that.
+ * - Muse Glimmer was dropped on 2026-10-16: it has no off switch (enabled
+ *   false, enable_thinking, thinking.type and effort none or minimal all
+ *   still think), so it always trailed. Spark took Meta's seat.
  * - Qwen3.8 Flash rejects reasoning_effort alongside enable_thinking: false.
  * - gpt-oss-120b accepts image input but cannot see it (it answers "unknown"
  *   for every sketch), so it stays out. Llama 4, Gemma 4 and the Mistral
@@ -41,7 +40,6 @@ export type RacerKey =
   | "glm-5-3-flash"
   | "minimax-m3"
   | "deepseek-v4-1-flash"
-  | "muse-glimmer"
   | "nemotron-3-5-super"
   | "muse-spark";
 
@@ -151,21 +149,6 @@ export const RACERS: Racer[] = [
     maxTokens: 24,
   },
   {
-    key: "muse-glimmer",
-    id: "meta-models/Muse-Glimmer-30B",
-    label: "Muse Glimmer",
-    short: "Glimmer",
-    color: "#FFA800",
-    heart: "💛",
-    shape: "flower",
-    room: "#FFD84A",
-    lab: "Meta",
-    inPerM: 0.35,
-    outPerM: 1.5,
-    params: { reasoning_effort: "low" },
-    maxTokens: 240,
-  },
-  {
     key: "nemotron-3-5-super",
     id: "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
     label: "Nemotron 3.5 Super",
@@ -209,7 +192,7 @@ export function isRacerKey(v: unknown): v is RacerKey {
  * in this browser, a replay link) keeps its creature: the seat carries on
  * under the new model.
  */
-const RETIRED: Record<string, RacerKey> = { "qwen3-7-plus": "qwen3-8-flash", "qwen3-5-9b": "muse-glimmer" };
+const RETIRED: Record<string, RacerKey> = { "qwen3-7-plus": "qwen3-8-flash", "muse-glimmer": "muse-spark", "qwen3-5-9b": "muse-spark" };
 
 /** A racer key from anything saved earlier, retired seats included. */
 export function seatOf(v: unknown): RacerKey | null {

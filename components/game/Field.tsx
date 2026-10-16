@@ -43,7 +43,7 @@ export function FieldHead({ today, note }: { today: number | null; note?: string
           {today === 1 ? "doodle today" : "doodles today"}
         </p>
       ) : (
-        <p className="tx-small text-ink-2">{note ?? "open models from seven labs"}</p>
+        <p className="tx-small text-ink-2">{note ?? "one open model from each lab"}</p>
       )}
     </div>
   );
@@ -79,7 +79,7 @@ export function FieldList({
   );
   return (
     <>
-      <ul className="hidden flex-col gap-1.5 lg:flex">{lanes.map((l) => row(l))}</ul>
+      <ul className="hidden flex-col gap-2 lg:flex">{lanes.map((l) => row(l))}</ul>
       <ul className="grid grid-cols-2 gap-2 lg:hidden [&>li:last-child:nth-child(odd)]:col-span-2">{lanes.map((l) => row(l, true))}</ul>
     </>
   );
