@@ -14,7 +14,7 @@ export const BRAND = {
     { name: "Hassan", url: "https://github.com/Nutlope" },
   ],
 
-  togetherUrl: "https://www.together.ai",
+  togetherUrl: "https://togetherai.link/?utm_source=open-pictionary&utm_medium=referral&utm_campaign=example-app",
   consoleUrl: "https://api.together.ai",
   signupUrl: "https://api.together.ai/signin",
   keysUrl: "https://api.together.ai/settings/api-keys",

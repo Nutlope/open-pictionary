@@ -9,7 +9,7 @@
 
 ## Tech stack
 
-- [Together AI](https://www.together.ai) for inference, with seven vision models from seven labs: Kimi K3, Qwen3.8 Flash, GLM-5.3 Flash, MiniMax M3, DeepSeek V4.1 Flash, Muse Spark and Nemotron 3.5 Super
+- [Together AI](https://togetherai.link/?utm_source=open-pictionary&utm_medium=referral&utm_campaign=example-app) for inference, with seven vision models from seven labs: Kimi K3, Qwen3.8 Flash, GLM-5.3 Flash, MiniMax M3, DeepSeek V4.1 Flash, Muse Spark and Nemotron 3.5 Super
 - GLM-5.3 Flash as the referee for guesses the synonym list can't settle
 - [Upstash Redis](https://upstash.com) for the global leaderboard, the daily board and share links
 - Next.js app router with Tailwind and Motion
